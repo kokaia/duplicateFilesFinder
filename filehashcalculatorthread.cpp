@@ -43,9 +43,9 @@ void FileHashCalculatorThread::run() {
       filesCount++;
     }
     if (i > nextPaint) {
-      emit setTopLabel(QString(tr("Found %1 folders and %2 files"))
-                           .arg(dirsSize - 1)
-                           .arg(filesCount - 1));
+      emit setBottomLabel(QString(tr("Found %1 folders and %2 files"))
+                              .arg(dirsSize - 1)
+                              .arg(filesCount - 1));
       nextPaint = nextPaint + getRandom();
     }
   }
@@ -57,6 +57,9 @@ void FileHashCalculatorThread::run() {
   i = 0;
   QSqlQuery query(*db);
   //    QSqlQuery query1(*db);
+
+  query.exec("delete from files");
+  query.exec("delete from results");
   query.prepare(
       "INSERT INTO files( file_hash, file_full_path, file_name, file_size, "
       "file_ext, file_created_date, file_modifed_date, add_date)"
@@ -81,8 +84,11 @@ void FileHashCalculatorThread::run() {
 
     if (i > nextPaint || i + 5 > filesCount) {
       emit setProgressbarValue(i);
-      emit setBottomLabel(
-          tr("Current processing #%1, file=%2").arg(i).arg(file.fileName()));
+      emit setBottomLabel(tr("Current processing #%1, file=%2")
+                              .arg(i)
+                              .arg(file.fileName().size() > 120
+                                       ? "... " + file.fileName().right(120)
+                                       : file.fileName()));
       nextPaint = nextPaint + getRandom();
     }
 

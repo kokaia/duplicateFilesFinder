@@ -4,6 +4,14 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow) {
   ui->setupUi(this);
+
+  connect(ui->tableWidget, SIGNAL(cellClicked(int, int)), this,
+          SLOT(cellClicked(int, int)));
+
+  ui->markingButton->addAction(ui->actionClearSelection);
+  ui->markingButton->addAction(ui->actionInvertSelection);
+  ui->markingButton->addAction(ui->actionSelectByPath);
+
   if (!QSqlDatabase::drivers().contains("QSQLITE")) {
     QMessageBox::critical(this, "Unable to load database",
                           "This demo needs the SQLITE driver");
@@ -67,14 +75,6 @@ MainWindow::~MainWindow() { delete ui; }
 
 void MainWindow::on_actionExit_triggered() { QApplication::exit(0); }
 
-void MainWindow::on_commandLinkButton_clicked() {
-  QString dir = QFileDialog::getExistingDirectory(
-      this, tr("Open Directory"), "",
-      QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
-
-  ui->listWidget->addItem(dir);
-}
-
 void MainWindow::on_startSearchButton_clicked() {
   ui->startSearchButton->setEnabled(false);
   ui->stopSearchButton->setEnabled(true);
@@ -124,55 +124,115 @@ void MainWindow::on_stopSearchButton_clicked() {
 }
 
 void MainWindow::correctFinishThread() {
+  ui->operationsTabsWidget->setCurrentIndex(0);
   hashCalculator->wait();
   hashCalculator->deleteLater();
   hashCalculator = 0;
   ui->startSearchButton->setEnabled(true);
   ui->stopSearchButton->setEnabled(false);
-  ui->operationsTabsWidget->setCurrentIndex(0);
 
   QSqlQuery query(db);
   query.exec(
       "SELECT file_size, file_name, file_ext, file_created_date, "
-      "file_modifed_date FROM results order by file_size desc");
+      "file_modifed_date, file_full_path FROM results order by file_size desc");
   int i = 0;
+  const int rowsCount = 9;
   long long prevSize = 0;
   int group = 0;
+  int j = 0;
   while (query.next()) {
     long long file_size = query.value(0).toLongLong();
     QString file_name = query.value(1).toString();
     QString file_ext = query.value(2).toString();
     QString file_created_date = query.value(3).toString();
     QString file_modifed_date = query.value(4).toString();
-    if (prevSize != file_size) ++group;
+    QString file_full_path = query.value(5).toString();
+
+    if (prevSize != file_size) {
+      if (group > 0) {
+        ui->tableWidget->insertRow(i);
+        for (j = 0; j < rowsCount; ++j) {
+          QTableWidgetItem *item = new QTableWidgetItem();
+          item->setBackgroundColor(Qt::darkGray);
+          ui->tableWidget->setItem(i, j, item);
+        }
+        i++;
+      }
+      ++group;
+    }
     ui->tableWidget->insertRow(i);
-    QTableWidgetItem *items[7];
-    for (int j = 0; j < 7; ++j) {
+    QTableWidgetItem *items[rowsCount];
+
+    for (j = 0; j < rowsCount; ++j) {
       items[j] = new QTableWidgetItem();
     }
-    items[0]->setText(QString::number(group));
-    items[1]->setText(QString::number(file_size));
-    items[2]->setText(sizeFormat(file_size));
-    items[3]->setText(file_name);
-    items[4]->setText(file_ext);
-    items[5]->setText(file_created_date);
-    items[6]->setText(file_modifed_date);
-    for (int j = 0; j < 7; ++j) {
+
+    items[MainWindow::Checkbox]->setCheckState(Qt::Unchecked);
+    items[MainWindow::Group]->setText(QString::number(group));
+    items[MainWindow::FileSize]->setText(QString::number(file_size));
+    items[MainWindow::FileSizeMixed]->setText(sizeFormat(file_size));
+    items[MainWindow::FileName]->setText(file_name);
+    items[MainWindow::Ext]->setText(file_ext);
+    items[MainWindow::CreateDate]->setText(file_created_date);
+    items[MainWindow::ModifedDate]->setText(file_modifed_date);
+    items[MainWindow::FullPath]->setText(file_full_path);
+
+    for (j = 0; j < rowsCount; ++j) {
       ui->tableWidget->setItem(i, j, items[j]);
     }
     ++i;
     prevSize = file_size;
   }
 
-  //  model1->setHeaderData(0, Qt::Horizontal, tr("file_size"));
-  //  model1->setHeaderData(1, Qt::Horizontal, tr("file_name"));
-  //  model1->setHeaderData(2, Qt::Horizontal, tr("file_ext"));
-  //  model1->setHeaderData(3, Qt::Horizontal, tr("file_created_date"));
-  //  model1->setHeaderData(4, Qt::Horizontal, tr("file_modifed_date"));
+  ui->tableWidget->resizeColumnsToContents();
+}
 
-  //  ui->tableView->setModel(model1);
-  //  ui->tableView->resizeColumnsToContents();
-  //    ui->tableView->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+void MainWindow::cellClicked(int row, int column) {
+  if (column != 0) return;
+
+  int group = ui->tableWidget->model()
+                  ->index(row, MainWindow::Group)
+                  .data(Qt::DisplayRole)
+                  .toInt();
+
+  if (group == 0) return;
+
+  QTableWidgetItem *item = ui->tableWidget->item(row, MainWindow::Checkbox);
+
+  if ((item->flags() & Qt::ItemIsEnabled) == 0) return;
+
+  ui->tableWidget->selectRow(row);
+
+  for (int i = 0; i < ui->tableWidget->columnCount(); ++i) {
+    QTableWidgetItem *ritem = ui->tableWidget->item(row, i);
+    QFont font(item->font());
+    if (item->checkState() == Qt::Checked) {
+      ritem->setBackgroundColor(Qt::gray);
+      font.setStrikeOut(true);
+    } else {
+      ritem->setBackgroundColor(Qt::white);
+      font.setStrikeOut(false);
+    }
+    ritem->setFont(font);
+  }
+
+  for (int i = 0; i < ui->tableWidget->rowCount(); ++i) {
+    if (i != row && (group ==
+                     ui->tableWidget->model()
+                         ->index(i, MainWindow::Group)
+                         .data(Qt::DisplayRole)
+                         .toInt())) {
+      QTableWidgetItem *nitem = ui->tableWidget->item(i, MainWindow::Checkbox);
+
+      if (item->checkState() == Qt::Checked) {
+        nitem->setFlags(nitem->flags() ^ Qt::ItemIsEnabled ^
+                        Qt::ItemIsEditable);
+      } else {
+        nitem->setFlags(nitem->flags() | Qt::ItemIsEnabled |
+                        Qt::ItemIsEditable);
+      }
+    }
+  }
 }
 
 QString MainWindow::sizeFormat(long long val) {
@@ -185,10 +245,6 @@ QString MainWindow::sizeFormat(long long val) {
 };
 
 void MainWindow::on_actionSave_To_File_changed() {}
-
-void MainWindow::on_pushButton_2_clicked() {
-  ui->tableWidget->horizontalHeader()->setStretchLastSection(true);
-}
 
 void MainWindow::setTopLabel(const QString &s) {
   ui->progressLabel->setText(s);
@@ -236,11 +292,11 @@ void MainWindow::deleteChildWidgets(QLayoutItem *item) {
 }
 
 void MainWindow::on_tableWidget_itemSelectionChanged() {
-  //     qDebug() <<
+  ui->tabWidget->setCurrentIndex(4);
   int fileSize = 0;
   QList<QTableWidgetItem *> items = ui->tableWidget->selectedItems();
   foreach (const QTableWidgetItem *item, items) {
-    if (item->column() == 1) {
+    if (item->column() == 2) {
       fileSize = item->data(0).toInt();
     }
   }
@@ -254,11 +310,9 @@ void MainWindow::on_tableWidget_itemSelectionChanged() {
                      "file_size = %1")
                  .arg(fileSize));
 
-  QGridLayout *layout = (QGridLayout *)ui->tab_2->layout();
-
-  for (int i = 0; i < layout->rowCount(); i++) {
-    for (int j = 0; j < layout->columnCount(); j++) {
-      remove(layout, i, j, true);
+  for (int i = 0; i < ui->resultPreviewTabLayout->rowCount(); i++) {
+    for (int j = 0; j < ui->resultPreviewTabLayout->columnCount(); j++) {
+      remove(ui->resultPreviewTabLayout, i, j, true);
     }
   }
 
@@ -267,11 +321,74 @@ void MainWindow::on_tableWidget_itemSelectionChanged() {
     //        int file_size = query.value(0).toInt();
     //        QString file_name = query.value(1).toString();
     QString file_full_path = query.value(2).toString();
-    //        QString file_ext = query.value(3).toString();
+    QString file_ext = query.value(3).toString();
     //        QFileInfo file(file_full_path);
 
-    FoundItemWidget *w = new FoundItemWidget(file_full_path);
+    QWidget *w;
+    if (FoundItemWidget::validExtentions.contains(file_ext.toLower())) {
+      w = new FoundItemWidget(file_full_path);
+    } else {
+      w = new FoundItemWebWidget(file_full_path);
+    }
+
     //    w->setGeometry(0,0,400,400);
-    layout->addWidget(w, 0, i++, Qt::AlignLeft | Qt::AlignTop);
+    ui->resultPreviewTabLayout->addWidget(w, 0, i++,
+                                          Qt::AlignLeft | Qt::AlignTop);
   }
+}
+
+void MainWindow::on_searchLocationRemovePathButton_clicked() {
+  qDeleteAll(ui->listWidget->selectedItems());
+}
+
+void MainWindow::on_searchLocationAddPathButton_clicked() {
+  QString dir = QFileDialog::getExistingDirectory(
+      this, tr("Open Directory"), "",
+      QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+
+  ui->listWidget->addItem(dir);
+}
+
+void MainWindow::on_searchLocationClearAll_clicked() {
+  ui->listWidget->clear();
+}
+
+void MainWindow::on_pushButton_3_clicked() {
+  for (int i = 0; i < ui->tableWidget->rowCount(); ++i) {
+    QTableWidgetItem *item = ui->tableWidget->item(i, MainWindow::Checkbox);
+    if (item == 0) continue;
+    if (item->checkState() == Qt::Checked) {
+      QTableWidgetItem *itemFullPath =
+          ui->tableWidget->item(i, MainWindow::FullPath);
+      qDebug() << itemFullPath->data(Qt::DisplayRole).toString();
+    }
+  }
+}
+
+void MainWindow::on_actionClearSelection_triggered() {
+  for (int i = 0; i < ui->tableWidget->rowCount(); ++i) {
+    QTableWidgetItem *item = ui->tableWidget->item(i, MainWindow::Checkbox);
+    if (item == 0) continue;
+    if (item->checkState() == Qt::Checked) {
+      item->setCheckState(Qt::Unchecked);
+      cellClicked(i, MainWindow::Checkbox);
+    }
+  }
+}
+
+void MainWindow::on_actionSelectByPath_triggered() {
+  bool ok;
+  int row = 0;
+  foreach (QTableWidgetItem *item, ui->tableWidget->selectedItems()) {
+    row = item->row();
+  }
+
+  QString text = QInputDialog::getText(
+      this, tr("QInputDialog::getText()"), tr("User name:"), QLineEdit::Normal,
+      ui->tableWidget->item(row, MainWindow::FullPath)
+          ->data(Qt::DisplayRole)
+          .toString(),
+      &ok);
+
+  if (ok && !text.isEmpty()) qDebug() << text;
 }

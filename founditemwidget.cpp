@@ -19,4 +19,7 @@ FoundItemWidget::FoundItemWidget(const QString& file_path, QWidget* parent)
   ui->label->setText(f.fileName());
 }
 
+const QSet<QString> FoundItemWidget::validExtentions = {"jpg", "jpeg", "png",
+                                                        "tiff", "bmp"};
+
 FoundItemWidget::~FoundItemWidget() { delete ui; }

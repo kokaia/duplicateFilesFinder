@@ -4,9 +4,15 @@
 #
 #-------------------------------------------------
 
-QT       += core gui sql
+QT       += core gui sql webkitwidgets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+
+cross_compile {
+  posix|qnx|linux: DEFINES += QTWEBENGINE_RECIPE_BROWSER_EMBEDDED
+}
+
+CONFIG+=c++11
 
 TARGET = duplicateFilesFinder
 TEMPLATE = app
@@ -15,11 +21,16 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     filehashcalculatorthread.cpp \
-    founditemwidget.cpp
+    founditemwidget.cpp \
+    founditemwebwidget.cpp
 
 HEADERS  += mainwindow.h \
     filehashcalculatorthread.h \
-    founditemwidget.h
+    founditemwidget.h \
+    founditemwebwidget.h
 
 FORMS    += mainwindow.ui \
-    founditemwidget.ui
+    founditemwidget.ui \
+    founditemwebwidget.ui
+
+DISTFILES +=
