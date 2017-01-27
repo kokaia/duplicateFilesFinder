@@ -57,9 +57,9 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton_3">
+       <widget class="QPushButton" name="deleteFilesButton">
         <property name="text">
-         <string>PushButton</string>
+         <string>Delete Files</string>
         </property>
        </widget>
       </item>
@@ -109,9 +109,9 @@
           </widget>
          </item>
          <item row="1" column="0">
-          <widget class="QRadioButton" name="radioButton_4">
+          <widget class="QRadioButton" name="sizeThenMd5RadioButton">
            <property name="text">
-            <string>&amp;Md5</string>
+            <string>Size, then &amp;Md5</string>
            </property>
           </widget>
          </item>
@@ -161,7 +161,7 @@
             </property>
             <item>
              <property name="text">
-              <string>/mnt/data/jedi/Tamta/tests/</string>
+              <string>/home/jedi/Public/</string>
              </property>
             </item>
            </widget>
@@ -409,7 +409,7 @@
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
-         <widget class="QTableWidget" name="tableWidget">
+         <widget class="SearchRessultTableWidget" name="tableWidget">
           <property name="editTriggers">
            <set>QAbstractItemView::NoEditTriggers</set>
           </property>
@@ -460,6 +460,11 @@
           <column>
            <property name="text">
             <string>Modifed Date</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>FileHash</string>
            </property>
           </column>
           <column>
@@ -530,6 +535,7 @@
      <addaction name="actionSave_To_Memory"/>
     </widget>
     <addaction name="menuAction1"/>
+    <addaction name="actionInvalidate_Files_Hash_Database"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -622,8 +628,56 @@
     <string>selectByPath</string>
    </property>
   </action>
+  <action name="actionInvalidate_Files_Hash_Database">
+   <property name="text">
+    <string>&amp;Invalidate Files Hash Database</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>SearchRessultTableWidget</class>
+   <extends>QTableWidget</extends>
+   <header location="global">searchressulttablewidget.h</header>
+   <slots>
+    <slot>deleteSelectedItems()</slot>
+   </slots>
+  </customwidget>
+ </customwidgets>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>deleteFilesButton</sender>
+   <signal>clicked()</signal>
+   <receiver>tableWidget</receiver>
+   <slot>deleteSelectedItems()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>328</x>
+     <y>68</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>319</x>
+     <y>576</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>searchLocationClearAll</sender>
+   <signal>clicked()</signal>
+   <receiver>listWidget</receiver>
+   <slot>clear()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>449</x>
+     <y>382</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>449</x>
+     <y>257</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

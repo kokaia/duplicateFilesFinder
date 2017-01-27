@@ -1,29 +1,26 @@
 #ifndef FILEHASHCALCULATORTHREAD_H
 #define FILEHASHCALCULATORTHREAD_H
 
+#include "common.h"
+
 #include <QCryptographicHash>
 #include <QDateTime>
-#include <QDebug>
 #include <QDir>
 #include <QFileInfo>
 #include <QHeaderView>
 #include <QLabel>
-#include <QMessageBox>
 #include <QProgressBar>
-#include <QSqlDatabase>
 #include <QSqlError>
-#include <QSqlTableModel>
 #include <QThread>
 #include <QWidget>
-#include <QtSql/QSqlQuery>
+
 
 class FileHashCalculatorThread : public QThread {
   Q_OBJECT
  public:
-  enum CompareMode { BySize = 0x0001, Md5 = 0x0002 };
+  enum CompareMode { BySize = 1, Md5 = 2 };
 
-  explicit FileHashCalculatorThread(
-      QSqlDatabase *db, QStringList dirs,
+  explicit FileHashCalculatorThread(QStringList dirs,
       CompareMode fileCompareMode = CompareMode::BySize);
   ~FileHashCalculatorThread();
   void stopWorking();
@@ -32,11 +29,13 @@ class FileHashCalculatorThread : public QThread {
   virtual void run();  // Q_DECL_OVERRIDE
 
  private:
-  QSqlDatabase *db;
+
   QStringList dirs;
   CompareMode fileCompareMode;
   bool stopWork = false;
   int getRandom();
+  void calculateResultsMd5AndRemoveUniq() ;
+  QString getFileHash(const QString &file_full_path, QFile *file);
 
   //    void
 

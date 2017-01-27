@@ -5,70 +5,9 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow) {
   ui->setupUi(this);
 
-  connect(ui->tableWidget, SIGNAL(cellClicked(int, int)), this,
-          SLOT(cellClicked(int, int)));
-
   ui->markingButton->addAction(ui->actionClearSelection);
   ui->markingButton->addAction(ui->actionInvertSelection);
   ui->markingButton->addAction(ui->actionSelectByPath);
-
-  if (!QSqlDatabase::drivers().contains("QSQLITE")) {
-    QMessageBox::critical(this, "Unable to load database",
-                          "This demo needs the SQLITE driver");
-    return;
-  }
-  this->db = QSqlDatabase::addDatabase("QSQLITE");
-  QString dbFileName = ":memory:";
-  //    dbFileName = QDir::currentPath();
-  //    dbFileName = dbFileName + "/files.sqlite";
-
-  this->db.setDatabaseName(dbFileName);
-  if (!this->db.open()) {
-    QMessageBox::critical(
-        0, qApp->tr("Cannot open database"),
-        qApp->tr("Unable to establish a database connection.\n"
-                 "This example needs SQLite support. Please read "
-                 "the Qt SQL driver documentation for information how "
-                 "to build it.\n\n"
-                 "Click Cancel to exit."),
-        QMessageBox::Cancel);
-    return;
-  }
-  QStringList tables = this->db.tables();
-  QSqlQuery query;
-  qDebug() << "Found Tables";
-  qDebug() << tables;
-
-  if (!tables.contains("files")) {
-    qDebug() << "Create table files";
-    query.exec(
-        "CREATE TABLE files ("
-        "id	INTEGER PRIMARY KEY AUTOINCREMENT,"
-        "file_hash	TEXT,"
-        "file_name	TEXT,"
-        "file_size	integer,"
-        "file_full_path	TEXT,"
-        "file_ext	TEXT,"
-        "file_created_date	date,"
-        "file_modifed_date	date,"
-        " add_date datetime "
-        ");");
-  }
-  if (!tables.contains("results")) {
-    qDebug() << "Create table results";
-    query.exec(
-        "CREATE TABLE results ("
-        "id	INTEGER PRIMARY KEY AUTOINCREMENT,"
-        "group_ida    int,"
-        "file_name	TEXT,"
-        "file_size	integer,"
-        "file_full_path	TEXT,"
-        "file_ext	TEXT,"
-        "file_created_date	date,"
-        "file_modifed_date	date,"
-        " add_date datetime "
-        ");");
-  }
 }
 
 MainWindow::~MainWindow() { delete ui; }
@@ -99,19 +38,25 @@ void MainWindow::on_startSearchButton_clicked() {
     qDebug() << "";
   }
 
-  hashCalculator = new FileHashCalculatorThread(&db, dirList);
+  FileHashCalculatorThread::CompareMode fileCompareMode =
+      FileHashCalculatorThread::BySize;
+  if (ui->sizeThenMd5RadioButton->isChecked()) {
+    fileCompareMode = FileHashCalculatorThread::Md5;
+  }
+
+  hashCalculator = new FileHashCalculatorThread(dirList, fileCompareMode);
   hashCalculator->start();
   connect(hashCalculator, SIGNAL(finished()), this,
           SLOT(correctFinishThread()));
 
-  connect(hashCalculator, SIGNAL(setTopLabel(QString)), this,
-          SLOT(setTopLabel(QString)));
-  connect(hashCalculator, SIGNAL(setBottomLabel(QString)), this,
-          SLOT(setBottomLabel(QString)));
-  connect(hashCalculator, SIGNAL(setProgressbarMaximumValue(int)), this,
-          SLOT(setProgressbarMaximumValue(int)));
-  connect(hashCalculator, SIGNAL(setProgressbarValue(int)), this,
-          SLOT(setProgressbarValue(int)));
+  connect(hashCalculator, SIGNAL(setTopLabel(QString)), ui->progressLabel,
+          SLOT(setText(QString)));
+  connect(hashCalculator, SIGNAL(setBottomLabel(QString)), ui->currentOperationLabel,
+          SLOT(setText(QString)));
+  connect(hashCalculator, SIGNAL(setProgressbarMaximumValue(int)), ui->progressbarFiles,
+          SLOT(setMaximum(int)));
+  connect(hashCalculator, SIGNAL(setProgressbarValue(int)), ui->progressbarFiles,
+          SLOT(setValue(int)));
 
   ui->operationsTabsWidget->setCurrentIndex(1);
 
@@ -125,33 +70,37 @@ void MainWindow::on_stopSearchButton_clicked() {
 
 void MainWindow::correctFinishThread() {
   ui->operationsTabsWidget->setCurrentIndex(0);
+  ui->tableWidget->removeAllRows();
   hashCalculator->wait();
   hashCalculator->deleteLater();
   hashCalculator = 0;
   ui->startSearchButton->setEnabled(true);
   ui->stopSearchButton->setEnabled(false);
 
-  QSqlQuery query(db);
+  QSqlQuery query(Common::db);
   query.exec(
       "SELECT file_size, file_name, file_ext, file_created_date, "
-      "file_modifed_date, file_full_path FROM results order by file_size desc");
+      "file_modifed_date, file_full_path, file_hash FROM results order by "
+      "file_size desc");
   int i = 0;
-  const int rowsCount = 9;
+  const int colsCount = SearchRessultTableWidget::FullPath +
+                        1;  // ui->tableWidget->columnCount();
   long long prevSize = 0;
   int group = 0;
   int j = 0;
   while (query.next()) {
-    long long file_size = query.value(0).toLongLong();
-    QString file_name = query.value(1).toString();
-    QString file_ext = query.value(2).toString();
+    long long file_size       = query.value(0).toLongLong();
+    QString file_name         = query.value(1).toString();
+    QString file_ext          = query.value(2).toString();
     QString file_created_date = query.value(3).toString();
     QString file_modifed_date = query.value(4).toString();
-    QString file_full_path = query.value(5).toString();
+    QString file_full_path    = query.value(5).toString();
+    QString file_hash         = query.value(6).toString();
 
     if (prevSize != file_size) {
       if (group > 0) {
         ui->tableWidget->insertRow(i);
-        for (j = 0; j < rowsCount; ++j) {
+        for (j = 0; j < colsCount; ++j) {
           QTableWidgetItem *item = new QTableWidgetItem();
           item->setBackgroundColor(Qt::darkGray);
           ui->tableWidget->setItem(i, j, item);
@@ -161,23 +110,26 @@ void MainWindow::correctFinishThread() {
       ++group;
     }
     ui->tableWidget->insertRow(i);
-    QTableWidgetItem *items[rowsCount];
+    QTableWidgetItem *items[colsCount];
 
-    for (j = 0; j < rowsCount; ++j) {
+    for (j = 0; j < colsCount; ++j) {
       items[j] = new QTableWidgetItem();
     }
 
-    items[MainWindow::Checkbox]->setCheckState(Qt::Unchecked);
-    items[MainWindow::Group]->setText(QString::number(group));
-    items[MainWindow::FileSize]->setText(QString::number(file_size));
-    items[MainWindow::FileSizeMixed]->setText(sizeFormat(file_size));
-    items[MainWindow::FileName]->setText(file_name);
-    items[MainWindow::Ext]->setText(file_ext);
-    items[MainWindow::CreateDate]->setText(file_created_date);
-    items[MainWindow::ModifedDate]->setText(file_modifed_date);
-    items[MainWindow::FullPath]->setText(file_full_path);
+    items[SearchRessultTableWidget::Checkbox]->setCheckState(Qt::Unchecked);
+    items[SearchRessultTableWidget::Group]->setText(QString::number(group));
+    items[SearchRessultTableWidget::FileSize]->setText(
+        QString::number(file_size));
+    items[SearchRessultTableWidget::FileSizeMixed]->setText(
+        Common::sizeFormat(file_size));
+    items[SearchRessultTableWidget::FileName]->setText(file_name);
+    items[SearchRessultTableWidget::Ext]->setText(file_ext);
+    items[SearchRessultTableWidget::CreateDate]->setText(file_created_date);
+    items[SearchRessultTableWidget::ModifedDate]->setText(file_modifed_date);
+    items[SearchRessultTableWidget::FileHash]->setText(file_hash);
+    items[SearchRessultTableWidget::FullPath]->setText(file_full_path);
 
-    for (j = 0; j < rowsCount; ++j) {
+    for (j = 0; j < colsCount; ++j) {
       ui->tableWidget->setItem(i, j, items[j]);
     }
     ++i;
@@ -185,81 +137,6 @@ void MainWindow::correctFinishThread() {
   }
 
   ui->tableWidget->resizeColumnsToContents();
-}
-
-void MainWindow::cellClicked(int row, int column) {
-  if (column != 0) return;
-
-  int group = ui->tableWidget->model()
-                  ->index(row, MainWindow::Group)
-                  .data(Qt::DisplayRole)
-                  .toInt();
-
-  if (group == 0) return;
-
-  QTableWidgetItem *item = ui->tableWidget->item(row, MainWindow::Checkbox);
-
-  if ((item->flags() & Qt::ItemIsEnabled) == 0) return;
-
-  ui->tableWidget->selectRow(row);
-
-  for (int i = 0; i < ui->tableWidget->columnCount(); ++i) {
-    QTableWidgetItem *ritem = ui->tableWidget->item(row, i);
-    QFont font(item->font());
-    if (item->checkState() == Qt::Checked) {
-      ritem->setBackgroundColor(Qt::gray);
-      font.setStrikeOut(true);
-    } else {
-      ritem->setBackgroundColor(Qt::white);
-      font.setStrikeOut(false);
-    }
-    ritem->setFont(font);
-  }
-
-  for (int i = 0; i < ui->tableWidget->rowCount(); ++i) {
-    if (i != row && (group ==
-                     ui->tableWidget->model()
-                         ->index(i, MainWindow::Group)
-                         .data(Qt::DisplayRole)
-                         .toInt())) {
-      QTableWidgetItem *nitem = ui->tableWidget->item(i, MainWindow::Checkbox);
-
-      if (item->checkState() == Qt::Checked) {
-        nitem->setFlags(nitem->flags() ^ Qt::ItemIsEnabled ^
-                        Qt::ItemIsEditable);
-      } else {
-        nitem->setFlags(nitem->flags() | Qt::ItemIsEnabled |
-                        Qt::ItemIsEditable);
-      }
-    }
-  }
-}
-
-QString MainWindow::sizeFormat(long long val) {
-  if (val / 1073741824 > 0)
-    return QString("%1 GB").arg((val * 100 / 1073741824) * 0.01);
-  if ((val / 1048576) > 0)
-    return QString("%1 MB").arg((val * 100 / 1048576) * 0.01);
-  if ((val / 1024) > 0) return QString("%1 KB").arg((val * 100 / 1024) * 0.01);
-  return QString("%1 B").arg(val);
-};
-
-void MainWindow::on_actionSave_To_File_changed() {}
-
-void MainWindow::setTopLabel(const QString &s) {
-  ui->progressLabel->setText(s);
-}
-
-void MainWindow::setBottomLabel(const QString &s) {
-  ui->currentOperationLabel->setText(s);
-}
-
-void MainWindow::setProgressbarMaximumValue(int val) {
-  ui->progressbarFiles->setMaximum(val);
-}
-
-void MainWindow::setProgressbarValue(int val) {
-  ui->progressbarFiles->setValue(val);
 }
 
 void MainWindow::remove(QGridLayout *layout, int row, int column,
@@ -292,19 +169,22 @@ void MainWindow::deleteChildWidgets(QLayoutItem *item) {
 }
 
 void MainWindow::on_tableWidget_itemSelectionChanged() {
+  qDebug() << "call tableWidget itemSelectionChanged";
   ui->tabWidget->setCurrentIndex(4);
   int fileSize = 0;
   QList<QTableWidgetItem *> items = ui->tableWidget->selectedItems();
   foreach (const QTableWidgetItem *item, items) {
-    if (item->column() == 2) {
-      fileSize = item->data(0).toInt();
+    if (item->column() == SearchRessultTableWidget::FileSize) {
+      fileSize = item->data(Qt::DisplayRole).toInt();
     }
   }
+
   if (fileSize == 0) {
     return;
   }
 
-  QSqlQuery query(db);
+  QSqlQuery query(Common::db);
+
   query.exec(QString("SELECT file_size, file_name, file_full_path, file_ext, "
                      "file_created_date, file_modifed_date FROM results WHERE "
                      "file_size = %1")
@@ -325,10 +205,16 @@ void MainWindow::on_tableWidget_itemSelectionChanged() {
     //        QFileInfo file(file_full_path);
 
     QWidget *w;
-    if (FoundItemWidget::validExtentions.contains(file_ext.toLower())) {
+    if (Common::photo.contains(file_ext.toLower())) {
+      w = new PreviewWidgetImage(file_full_path);
+    } else if (Common::video.contains(file_ext.toLower())) {
+       w = new PreviewWidgetVideo(file_full_path);
+    } else if (Common::audio.contains(file_ext.toLower())) {
+        w = new PreviewWidgetAudio(file_full_path);
+     } else  if (Common::web.contains(file_ext.toLower())) {
+        w = new PreviewWidgetWeb(file_full_path);
+     } else {
       w = new FoundItemWidget(file_full_path);
-    } else {
-      w = new FoundItemWebWidget(file_full_path);
     }
 
     //    w->setGeometry(0,0,400,400);
@@ -349,29 +235,16 @@ void MainWindow::on_searchLocationAddPathButton_clicked() {
   ui->listWidget->addItem(dir);
 }
 
-void MainWindow::on_searchLocationClearAll_clicked() {
-  ui->listWidget->clear();
-}
 
-void MainWindow::on_pushButton_3_clicked() {
-  for (int i = 0; i < ui->tableWidget->rowCount(); ++i) {
-    QTableWidgetItem *item = ui->tableWidget->item(i, MainWindow::Checkbox);
-    if (item == 0) continue;
-    if (item->checkState() == Qt::Checked) {
-      QTableWidgetItem *itemFullPath =
-          ui->tableWidget->item(i, MainWindow::FullPath);
-      qDebug() << itemFullPath->data(Qt::DisplayRole).toString();
-    }
-  }
-}
 
 void MainWindow::on_actionClearSelection_triggered() {
   for (int i = 0; i < ui->tableWidget->rowCount(); ++i) {
-    QTableWidgetItem *item = ui->tableWidget->item(i, MainWindow::Checkbox);
+    QTableWidgetItem *item =
+        ui->tableWidget->item(i, SearchRessultTableWidget::Checkbox);
     if (item == 0) continue;
     if (item->checkState() == Qt::Checked) {
       item->setCheckState(Qt::Unchecked);
-      cellClicked(i, MainWindow::Checkbox);
+      ui->tableWidget->cellClicked(i, SearchRessultTableWidget::Checkbox);
     }
   }
 }
@@ -385,10 +258,28 @@ void MainWindow::on_actionSelectByPath_triggered() {
 
   QString text = QInputDialog::getText(
       this, tr("QInputDialog::getText()"), tr("User name:"), QLineEdit::Normal,
-      ui->tableWidget->item(row, MainWindow::FullPath)
+      ui->tableWidget->item(row, SearchRessultTableWidget::FullPath)
           ->data(Qt::DisplayRole)
           .toString(),
       &ok);
 
-  if (ok && !text.isEmpty()) qDebug() << text;
+  if (!ok || text.isEmpty()) return;
+  qDebug() << text;
+
+  for (int i = 0; i < ui->tableWidget->rowCount(); ++i) {
+    QTableWidgetItem *fpath =
+        ui->tableWidget->item(i, SearchRessultTableWidget::FullPath);
+    if (fpath == 0) continue;
+    if (fpath->data(Qt::DisplayRole).toString().startsWith(text)) {
+      QTableWidgetItem *item =
+          ui->tableWidget->item(i, SearchRessultTableWidget::Checkbox);
+      item->setCheckState(Qt::Checked);
+      ui->tableWidget->cellClicked(i, SearchRessultTableWidget::Checkbox);
+    }
+  }
+}
+
+void MainWindow::on_actionInvalidate_Files_Hash_Database_triggered() {
+  QSqlQuery query(Common::hashDb);
+  query.exec("DELETE FROM files_hash ");
 }

@@ -1,9 +1,8 @@
 #include "filehashcalculatorthread.h"
 
-FileHashCalculatorThread::FileHashCalculatorThread(QSqlDatabase *db,
-                                                   QStringList dirs,
+FileHashCalculatorThread::FileHashCalculatorThread(QStringList dirs,
                                                    CompareMode fileCompareMode)
-    : db(db), dirs(dirs), fileCompareMode(fileCompareMode) {
+    : dirs(dirs), fileCompareMode(fileCompareMode) {
   qsrand(QTime::currentTime().msec());
 }
 
@@ -55,16 +54,16 @@ void FileHashCalculatorThread::run() {
                        .arg(filesCount));
   emit setProgressbarMaximumValue(filesCount);
   i = 0;
-  QSqlQuery query(*db);
+  QSqlQuery query(Common::db);
   //    QSqlQuery query1(*db);
 
   query.exec("delete from files");
   query.exec("delete from results");
   query.prepare(
-      "INSERT INTO files( file_hash, file_full_path, file_name, file_size, "
+      "INSERT INTO files( file_full_path, file_name, file_size, "
       "file_ext, file_created_date, file_modifed_date, add_date)"
       " VALUES "
-      "(:file_hash,:file_full_path,:file_name,:file_size,:file_ext,:file_"
+      "(:file_full_path,:file_name,:file_size,:file_ext,:file_"
       "created_date,:file_modifed_date, datetime('now') )");
 
   nextPaint = 1;
@@ -73,14 +72,6 @@ void FileHashCalculatorThread::run() {
     if (!file.exists()) {
       continue;
     }
-
-    if (fileCompareMode == CompareMode::Md5) file.open(QIODevice::ReadOnly);
-
-    QString hashData =
-        (fileCompareMode == CompareMode::Md5)
-            ? QCryptographicHash::hash(file.readAll(), QCryptographicHash::Md5)
-                  .toHex()
-            : "";
 
     if (i > nextPaint || i + 5 > filesCount) {
       emit setProgressbarValue(i);
@@ -94,7 +85,6 @@ void FileHashCalculatorThread::run() {
 
     QFileInfo fileInfo = QFileInfo(file);
 
-    query.bindValue(":file_hash", hashData);
     query.bindValue(":file_full_path", fileInfo.absoluteFilePath());
     query.bindValue(":file_name", fileInfo.fileName());
     query.bindValue(":file_size", fileInfo.size());
@@ -111,6 +101,7 @@ void FileHashCalculatorThread::run() {
       // query.lastError().text(), QMessageBox::Cancel);
     }
   }
+
   emit setProgressbarValue(filesCount);
 
   query.exec(
@@ -122,18 +113,93 @@ void FileHashCalculatorThread::run() {
       "having count(*) >1)"
       " order by file_size desc ");
 
-  //    qDebug() << dirs;
-  //    qDebug() << files;
+  if (fileCompareMode & Md5) {
+    calculateResultsMd5AndRemoveUniq();
+  }
+}
 
-  //    while (!this->stopWork && !isInterruptionRequested()) {
-  //        qDebug() << "Executed "<< i++ << " times";
-  //        label->setText(QString("Executed %1 times").arg(i));
-  //        this->sleep(1);
-  //    }
+void FileHashCalculatorThread::calculateResultsMd5AndRemoveUniq() {
+  QSqlQuery query(Common::db);
 
-  //        QString result;
-  /* ... here is the expensive or blocking operation ... */
-  //        emit resultReady(result);
+  query.exec("SELECT count(*) FROM results ");
+
+  query.first();
+  int filesCount = query.value(0).toInt();
+
+  qDebug() << "Found " << filesCount << " items";
+
+  emit setProgressbarValue(0);
+  emit setProgressbarMaximumValue(filesCount);
+
+  query.exec("SELECT id, file_full_path FROM results ");
+  QSqlQuery updateQuery(Common::db);
+
+  updateQuery.prepare("UPDATE results SET file_hash =:file_hash WHERE id=:id");
+
+  int curfilesCount = 0;
+  while (!this->stopWork && !isInterruptionRequested() && query.next()) {
+    int file_id = query.value(0).toInt();
+    QString file_full_path = query.value(1).toString();
+
+    QFile file(file_full_path);
+    if (!file.exists()) {
+      continue;
+    }
+
+    QString hashData = this->getFileHash(file_full_path, &file);
+
+    updateQuery.bindValue(":id", file_id);
+    updateQuery.bindValue(":file_hash", hashData);
+    updateQuery.exec();
+    if (updateQuery.lastError().isValid()) {
+      qDebug() << updateQuery.lastError().text();
+    }
+    emit setProgressbarValue(curfilesCount++);
+    emit setBottomLabel(tr("Current processing #%1, from %2 file=%3")
+                            .arg(curfilesCount)
+                            .arg(filesCount)
+                            .arg(file.fileName().size() > 120
+                                     ? "... " + file.fileName().right(120)
+                                     : file.fileName()));
+  }
+  query.exec("delete from results where file_hash is null");
+  query.exec(
+      "delete from results where file_hash in (select file_hash from results "
+      "group by file_hash having count(*) =1 )");
 }
 
 void FileHashCalculatorThread::stopWorking() { this->stopWork = true; }
+
+QString FileHashCalculatorThread::getFileHash(const QString &file_full_path,
+                                              QFile *file) {
+  QSqlQuery query(Common::hashDb);
+  query.prepare(
+      "SELECT file_hash FROM files_hash where file_full_path like "
+      ":file_full_path ");
+  query.bindValue(":file_full_path", file_full_path);
+  query.exec();
+
+  // qDebug() << QString("SELECT file_hash FROM files_hash where file_full_path
+  // like'%1'").arg(file_full_path);
+  while (query.next()) {
+    return query.value(0).toString();
+  }
+
+  file->open(QIODevice::ReadOnly);
+  QString hashData =
+      QCryptographicHash::hash(file->readAll(), QCryptographicHash::Md5)
+          .toHex();
+
+  query.prepare(
+      "INSERT INTO files_hash(file_hash, file_full_path) "
+      " VALUES(:file_hash, :file_full_path)");
+
+  query.bindValue(":file_full_path", file_full_path);
+  query.bindValue(":file_hash", hashData);
+  query.exec();
+
+  if (query.lastError().isValid()) {
+    qDebug() << query.lastError().text();
+  }
+  return hashData;
+}
