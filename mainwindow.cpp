@@ -8,6 +8,9 @@ MainWindow::MainWindow(QWidget *parent)
   ui->markingButton->addAction(ui->actionClearSelection);
   ui->markingButton->addAction(ui->actionInvertSelection);
   ui->markingButton->addAction(ui->actionSelectByPath);
+
+  ui->searchDirsWidget->getListWidget()->addItem("/home/jedi/Public/");
+
 }
 
 MainWindow::~MainWindow() { delete ui; }
@@ -18,8 +21,8 @@ void MainWindow::on_startSearchButton_clicked() {
   ui->startSearchButton->setEnabled(false);
   ui->stopSearchButton->setEnabled(true);
   QStringList dirList;
-  for (int i = 0; i < ui->listWidget->count(); ++i) {
-    QListWidgetItem *item = ui->listWidget->item(i);
+  for (int i = 0; i < ui->searchDirsWidget->getListWidget()->count(); ++i) {
+    QListWidgetItem *item = ui->searchDirsWidget->getListWidget()->item(i);
     if (item->text().length() > 0) {
       QFileInfo fi(item->text());
       if (fi.isDir()) {
@@ -44,7 +47,7 @@ void MainWindow::on_startSearchButton_clicked() {
     fileCompareMode = FileHashCalculatorThread::Md5;
   }
 
-  hashCalculator = new FileHashCalculatorThread(dirList, fileCompareMode);
+  hashCalculator = new FileHashCalculatorThread( dirList, ui->filtersWidget, fileCompareMode);
   hashCalculator->start();
   connect(hashCalculator, SIGNAL(finished()), this,
           SLOT(correctFinishThread()));
@@ -60,8 +63,6 @@ void MainWindow::on_startSearchButton_clicked() {
 
   ui->operationsTabsWidget->setCurrentIndex(1);
 
-  //    qDebug() << "hashCalculator";
-  //    ui->startSearchButton->setEnabled(true);
 }
 
 void MainWindow::on_stopSearchButton_clicked() {
@@ -77,64 +78,7 @@ void MainWindow::correctFinishThread() {
   ui->startSearchButton->setEnabled(true);
   ui->stopSearchButton->setEnabled(false);
 
-  QSqlQuery query(Common::db);
-  query.exec(
-      "SELECT file_size, file_name, file_ext, file_created_date, "
-      "file_modifed_date, file_full_path, file_hash FROM results order by "
-      "file_size desc");
-  int i = 0;
-  const int colsCount = SearchRessultTableWidget::FullPath +
-                        1;  // ui->tableWidget->columnCount();
-  long long prevSize = 0;
-  int group = 0;
-  int j = 0;
-  while (query.next()) {
-    long long file_size       = query.value(0).toLongLong();
-    QString file_name         = query.value(1).toString();
-    QString file_ext          = query.value(2).toString();
-    QString file_created_date = query.value(3).toString();
-    QString file_modifed_date = query.value(4).toString();
-    QString file_full_path    = query.value(5).toString();
-    QString file_hash         = query.value(6).toString();
-
-    if (prevSize != file_size) {
-      if (group > 0) {
-        ui->tableWidget->insertRow(i);
-        for (j = 0; j < colsCount; ++j) {
-          QTableWidgetItem *item = new QTableWidgetItem();
-          item->setBackgroundColor(Qt::darkGray);
-          ui->tableWidget->setItem(i, j, item);
-        }
-        i++;
-      }
-      ++group;
-    }
-    ui->tableWidget->insertRow(i);
-    QTableWidgetItem *items[colsCount];
-
-    for (j = 0; j < colsCount; ++j) {
-      items[j] = new QTableWidgetItem();
-    }
-
-    items[SearchRessultTableWidget::Checkbox]->setCheckState(Qt::Unchecked);
-    items[SearchRessultTableWidget::Group]->setText(QString::number(group));
-    items[SearchRessultTableWidget::FileSize]->setText(
-        QString::number(file_size));
-    items[SearchRessultTableWidget::FileSizeMixed]->setText(
-        Common::sizeFormat(file_size));
-    items[SearchRessultTableWidget::FileName]->setText(file_name);
-    items[SearchRessultTableWidget::Ext]->setText(file_ext);
-    items[SearchRessultTableWidget::CreateDate]->setText(file_created_date);
-    items[SearchRessultTableWidget::ModifedDate]->setText(file_modifed_date);
-    items[SearchRessultTableWidget::FileHash]->setText(file_hash);
-    items[SearchRessultTableWidget::FullPath]->setText(file_full_path);
-
-    for (j = 0; j < colsCount; ++j) {
-      ui->tableWidget->setItem(i, j, items[j]);
-    }
-    ++i;
-    prevSize = file_size;
-  }
+  ui->tableWidget->displayResults();
 
   ui->tableWidget->resizeColumnsToContents();
 }
@@ -169,6 +113,7 @@ void MainWindow::deleteChildWidgets(QLayoutItem *item) {
 }
 
 void MainWindow::on_tableWidget_itemSelectionChanged() {
+  if (ui->tableWidget->isAutoCheck) return ;
   qDebug() << "call tableWidget itemSelectionChanged";
   ui->tabWidget->setCurrentIndex(4);
   int fileSize = 0;
@@ -220,62 +165,6 @@ void MainWindow::on_tableWidget_itemSelectionChanged() {
     //    w->setGeometry(0,0,400,400);
     ui->resultPreviewTabLayout->addWidget(w, 0, i++,
                                           Qt::AlignLeft | Qt::AlignTop);
-  }
-}
-
-void MainWindow::on_searchLocationRemovePathButton_clicked() {
-  qDeleteAll(ui->listWidget->selectedItems());
-}
-
-void MainWindow::on_searchLocationAddPathButton_clicked() {
-  QString dir = QFileDialog::getExistingDirectory(
-      this, tr("Open Directory"), "",
-      QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
-
-  ui->listWidget->addItem(dir);
-}
-
-
-
-void MainWindow::on_actionClearSelection_triggered() {
-  for (int i = 0; i < ui->tableWidget->rowCount(); ++i) {
-    QTableWidgetItem *item =
-        ui->tableWidget->item(i, SearchRessultTableWidget::Checkbox);
-    if (item == 0) continue;
-    if (item->checkState() == Qt::Checked) {
-      item->setCheckState(Qt::Unchecked);
-      ui->tableWidget->cellClicked(i, SearchRessultTableWidget::Checkbox);
-    }
-  }
-}
-
-void MainWindow::on_actionSelectByPath_triggered() {
-  bool ok;
-  int row = 0;
-  foreach (QTableWidgetItem *item, ui->tableWidget->selectedItems()) {
-    row = item->row();
-  }
-
-  QString text = QInputDialog::getText(
-      this, tr("QInputDialog::getText()"), tr("User name:"), QLineEdit::Normal,
-      ui->tableWidget->item(row, SearchRessultTableWidget::FullPath)
-          ->data(Qt::DisplayRole)
-          .toString(),
-      &ok);
-
-  if (!ok || text.isEmpty()) return;
-  qDebug() << text;
-
-  for (int i = 0; i < ui->tableWidget->rowCount(); ++i) {
-    QTableWidgetItem *fpath =
-        ui->tableWidget->item(i, SearchRessultTableWidget::FullPath);
-    if (fpath == 0) continue;
-    if (fpath->data(Qt::DisplayRole).toString().startsWith(text)) {
-      QTableWidgetItem *item =
-          ui->tableWidget->item(i, SearchRessultTableWidget::Checkbox);
-      item->setCheckState(Qt::Checked);
-      ui->tableWidget->cellClicked(i, SearchRessultTableWidget::Checkbox);
-    }
   }
 }
 

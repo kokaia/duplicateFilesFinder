@@ -5,7 +5,7 @@ PreviewWidgetImage::PreviewWidgetImage(const QString& file_path, QWidget *parent
     QWidget(parent),
     ui(new Ui::PreviewWidgetImage)
 {
-    qDebug() <<  QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss") << "Call ImagePreviewWidget constructor";
+    qDebug() <<  QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss") << "Call PreviewWidgetImage constructor";
     ui->setupUi(this);
     QPixmap pix(file_path);
     QGraphicsScene* scene = new QGraphicsScene();
@@ -25,7 +25,9 @@ PreviewWidgetImage::PreviewWidgetImage(const QString& file_path, QWidget *parent
 
 PreviewWidgetImage::~PreviewWidgetImage()
 {
-    qDebug() <<  QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss") << "Call ImagePreviewWidget destructor";
+    qDebug() <<  QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss") << "Call PreviewWidgetImage destructor";
+    qDeleteAll(ui->graphicsView->scene()->items());
+    delete ui->graphicsView->scene();
     delete ui->graphicsView;
     delete ui->label;
     delete ui;
@@ -43,5 +45,7 @@ void PreviewWidgetImage::mousePressEvent(QMouseEvent* event) {
     // view->fitInView( view->scene()->sceneRect(),
     // Qt::KeepAspectRatioByExpanding);
     view->show();
+
+
   }
 }

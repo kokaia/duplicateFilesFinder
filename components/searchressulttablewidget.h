@@ -7,6 +7,7 @@
 #include <QDebug>
 #include <QKeyEvent>
 #include <QMessageBox>
+#include <QInputDialog>
 
 
 class SearchRessultTableWidget : public QTableWidget
@@ -30,9 +31,10 @@ public:
       FullPath = 9
     };
 
+   bool isAutoCheck;
    void cellClicked(int row, int column);
-
    void removeAllRows();
+   void displayResults();
 
 protected:
   void keyPressEvent(QKeyEvent *event) override;
@@ -40,7 +42,9 @@ protected:
 signals:
 
 public slots:
- void deleteSelectedItems();
+  void selectItemsByPath();
+  void unSelectItems();
+  void deleteSelectedItems();
 
 };
 

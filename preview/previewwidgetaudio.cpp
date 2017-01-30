@@ -32,7 +32,10 @@ PreviewWidgetAudio::PreviewWidgetAudio(const QString &file_path,
   ui->playButton->setEnabled(true);
 }
 
-PreviewWidgetAudio::~PreviewWidgetAudio() { delete ui; }
+PreviewWidgetAudio::~PreviewWidgetAudio() {
+    mediaPlayer.stop();
+    delete ui;
+}
 
 void PreviewWidgetAudio::setUrl(const QUrl &url) {
   ui->errorLabel->setText(QString());

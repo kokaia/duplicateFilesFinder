@@ -13,17 +13,21 @@ class Common : public QObject
     Q_OBJECT
 public:
 
-    static const QSet<QString> archive;
+    enum FilterExtGroup { allFilesGroup, photoGroup, audioGroup, videoGroup, archiveGroup };
+
+    static const QSet<QString> systemFiles;
+    static const QSet<QString> photo;
     static const QSet<QString> audio;
+    static const QSet<QString> video;
+
+    static const QSet<QString> archive;
     static const QSet<QString> excel;
     static const QSet<QString> executable;
     static const QSet<QString> javascript;
     static const QSet<QString> pdf_documents;
-    static const QSet<QString> photo;
     static const QSet<QString> php;
     static const QSet<QString> powerpoint;
     static const QSet<QString> shellscript;
-    static const QSet<QString> video;
     static const QSet<QString> word;
     static const QSet<QString> xml;
     static const QSet<QString> web;

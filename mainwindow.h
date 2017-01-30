@@ -3,10 +3,10 @@
 
 #include "common.h"
 #include "filehashcalculatorthread.h"
-#include "previewwidgetaudio.h"
-#include "previewwidgetimage.h"
-#include "previewwidgetvideo.h"
-#include "previewwidgetweb.h"
+#include "preview/previewwidgetaudio.h"
+#include "preview/previewwidgetimage.h"
+#include "preview/previewwidgetvideo.h"
+#include "preview/previewwidgetweb.h"
 #include "founditemwidget.h"
 
 #include <QCheckBox>
@@ -41,10 +41,6 @@ class MainWindow : public QMainWindow {
   void on_stopSearchButton_clicked();
   void correctFinishThread();
   void on_tableWidget_itemSelectionChanged();
-  void on_searchLocationRemovePathButton_clicked();
-  void on_searchLocationAddPathButton_clicked();
-  void on_actionClearSelection_triggered();
-  void on_actionSelectByPath_triggered();
   void on_actionInvalidate_Files_Hash_Database_triggered();
 
 private:

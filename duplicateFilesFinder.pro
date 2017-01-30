@@ -23,27 +23,33 @@ SOURCES += main.cpp\
     filehashcalculatorthread.cpp \
     founditemwidget.cpp \
     common.cpp \
-    searchressulttablewidget.cpp \
-    previewwidgetimage.cpp \
-    previewwidgetaudio.cpp \
-    previewwidgetvideo.cpp \
-    previewwidgetweb.cpp
+    components/searchressulttablewidget.cpp \
+    preview/previewwidgetimage.cpp \
+    preview/previewwidgetaudio.cpp \
+    preview/previewwidgetvideo.cpp \
+    preview/previewwidgetweb.cpp \
+    components/commonlistwidget.cpp \
+    components/tfilterwidget.cpp
 
 HEADERS  += mainwindow.h \
     filehashcalculatorthread.h \
     founditemwidget.h \
     common.h \
-    searchressulttablewidget.h \
-    previewwidgetimage.h \
-    previewwidgetaudio.h \
-    previewwidgetvideo.h \
-    previewwidgetweb.h
+    components/searchressulttablewidget.h \
+    preview/previewwidgetimage.h \
+    preview/previewwidgetaudio.h \
+    preview/previewwidgetvideo.h \
+    preview/previewwidgetweb.h \
+    components/commonlistwidget.h \
+    components/tfilterwidget.h
 
 FORMS    += mainwindow.ui \
     founditemwidget.ui \
-    previewwidgetimage.ui \
-    previewwidgetaudio.ui \
-    previewwidgetvideo.ui \
-    previewwidgetweb.ui
+    preview/previewwidgetimage.ui \
+    preview/previewwidgetaudio.ui \
+    preview/previewwidgetvideo.ui \
+    preview/previewwidgetweb.ui \
+    components/commonlistwidget.ui \
+    components/tfilterwidget.ui
 
 DISTFILES +=

@@ -13,9 +13,6 @@
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
-  <property name="dockOptions">
-   <set>QMainWindow::AllowTabbedDocks|QMainWindow::AnimatedDocks</set>
-  </property>
   <widget class="QWidget" name="centralWidget">
    <property name="sizePolicy">
     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -146,244 +143,22 @@
         <property name="currentIndex">
          <number>0</number>
         </property>
-        <widget class="QWidget" name="searchLocationsTab">
+        <widget class="CommonListWidget" name="searchDirsWidget">
          <attribute name="title">
           <string>Search Locations</string>
          </attribute>
-         <layout class="QVBoxLayout" name="verticalLayout_3">
-          <item>
-           <widget class="QListWidget" name="listWidget">
-            <property name="selectionBehavior">
-             <enum>QAbstractItemView::SelectRows</enum>
-            </property>
-            <property name="selectionRectVisible">
-             <bool>true</bool>
-            </property>
-            <item>
-             <property name="text">
-              <string>/home/jedi/Public/</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_3">
-            <item>
-             <widget class="QPushButton" name="searchLocationAddPathButton">
-              <property name="text">
-               <string>Add Path</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="searchLocationRemovePathButton">
-              <property name="text">
-               <string>Remove Selected</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="searchLocationClearAll">
-              <property name="text">
-               <string>Clear All</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_2">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </item>
-         </layout>
         </widget>
-        <widget class="QWidget" name="tab">
+        <widget class="TFilterWidget" name="filtersWidget">
          <attribute name="title">
           <string>Filters</string>
          </attribute>
-         <layout class="QGridLayout" name="gridLayout_2">
-          <item row="2" column="0">
-           <widget class="QComboBox" name="comboBox">
-            <item>
-             <property name="text">
-              <string>All Files | *.*</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Images | *.jpg, *.jpeg, *.png, *.tiff, *.bmp</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-          <item row="9" column="0">
-           <widget class="QCheckBox" name="checkBox">
-            <property name="text">
-             <string>Protect System Files (*.dll, *.sys, *.ocx, *.drv, *.dat)</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="0">
-           <widget class="QCheckBox" name="checkBox_2">
-            <property name="text">
-             <string>Include Hidden Files and Folders</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="8" column="0">
-           <widget class="QCheckBox" name="checkBox_3">
-            <property name="text">
-             <string>Protect System Folders</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="0">
-           <widget class="QWidget" name="widget" native="true">
-            <layout class="QGridLayout" name="gridLayout_3">
-             <item row="1" column="2">
-              <widget class="QDateEdit" name="dateEdit_2"/>
-             </item>
-             <item row="1" column="8">
-              <spacer name="horizontalSpacer_3">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="0" column="4">
-              <widget class="QCheckBox" name="checkBox_5">
-               <property name="text">
-                <string>File Size Range</string>
-               </property>
-               <property name="checked">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="6">
-              <widget class="QSpinBox" name="spinBox_2">
-               <property name="maximum">
-                <number>10000</number>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="4">
-              <widget class="QSpinBox" name="spinBox">
-               <property name="maximum">
-                <number>10000</number>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="5">
-              <widget class="QLabel" name="label_3">
-               <property name="text">
-                <string>--</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="7">
-              <widget class="QComboBox" name="comboBox_2">
-               <item>
-                <property name="text">
-                 <string>B</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>KB</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>MB</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>GB</string>
-                </property>
-               </item>
-              </widget>
-             </item>
-             <item row="1" column="3">
-              <spacer name="horizontalSpacer_4">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="0" column="0">
-              <widget class="QCheckBox" name="checkBox_4">
-               <property name="text">
-                <string>File Modified Date Range</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0">
-              <widget class="QDateEdit" name="dateEdit"/>
-             </item>
-             <item row="1" column="1">
-              <widget class="QLabel" name="label_2">
-               <property name="text">
-                <string> --</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label">
-            <property name="text">
-             <string>Set Filters</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="FileMask">
-            <property name="text">
-             <string>File Mask</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
         </widget>
-        <widget class="QWidget" name="tab_2">
+        <widget class="QWidget" name="exclusionsWidget">
          <attribute name="title">
           <string>Exclusions</string>
          </attribute>
         </widget>
-        <widget class="QWidget" name="tab_3">
+        <widget class="CommonListWidget" name="protectFoldersWidget">
          <attribute name="title">
           <string>Protect Folders</string>
          </attribute>
@@ -639,10 +414,24 @@
   <customwidget>
    <class>SearchRessultTableWidget</class>
    <extends>QTableWidget</extends>
-   <header location="global">searchressulttablewidget.h</header>
+   <header location="global">components/searchressulttablewidget.h</header>
    <slots>
     <slot>deleteSelectedItems()</slot>
+    <slot>unSelectItems()</slot>
+    <slot>selectItemsByPath()</slot>
    </slots>
+  </customwidget>
+  <customwidget>
+   <class>CommonListWidget</class>
+   <extends>QWidget</extends>
+   <header location="global">components/commonlistwidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>TFilterWidget</class>
+   <extends>QWidget</extends>
+   <header location="global">components/tfilterwidget.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>
@@ -664,18 +453,34 @@
    </hints>
   </connection>
   <connection>
-   <sender>searchLocationClearAll</sender>
-   <signal>clicked()</signal>
-   <receiver>listWidget</receiver>
-   <slot>clear()</slot>
+   <sender>actionSelectByPath</sender>
+   <signal>triggered()</signal>
+   <receiver>tableWidget</receiver>
+   <slot>selectItemsByPath()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>449</x>
-     <y>382</y>
+     <x>-1</x>
+     <y>-1</y>
     </hint>
     <hint type="destinationlabel">
-     <x>449</x>
-     <y>257</y>
+     <x>558</x>
+     <y>596</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionClearSelection</sender>
+   <signal>triggered()</signal>
+   <receiver>tableWidget</receiver>
+   <slot>unSelectItems()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>558</x>
+     <y>596</y>
     </hint>
    </hints>
   </connection>

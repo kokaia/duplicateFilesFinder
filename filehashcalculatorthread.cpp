@@ -1,14 +1,16 @@
 #include "filehashcalculatorthread.h"
+#include "ui_mainwindow.h"
 
-FileHashCalculatorThread::FileHashCalculatorThread(QStringList dirs,
+FileHashCalculatorThread::FileHashCalculatorThread(const QStringList &dirs, TFilterWidget *filtersWidget,
                                                    CompareMode fileCompareMode)
-    : dirs(dirs), fileCompareMode(fileCompareMode) {
-  qsrand(QTime::currentTime().msec());
+    : filtersWidget(filtersWidget), dirs(dirs), fileCompareMode(fileCompareMode) {
+  qsrand(static_cast<uint>(QTime::currentTime().msec()));
 }
 
 FileHashCalculatorThread::~FileHashCalculatorThread() {
-  // delete label;
-  //    delete dirs;
+//    delete &dirs;
+//    delete &fileCompareMode;
+//    delete &stopWork;
 }
 
 int FileHashCalculatorThread::getRandom() { return qrand() % 100 + 100; }
@@ -19,27 +21,52 @@ void FileHashCalculatorThread::run() {
 
   int dirsSize = dirs.size();
   int i = 0, filesCount = 0;
-  QStringList files, curdirList, curFilesList;
-  QString str;
+  QStringList files, curdirList;
+  QFileInfoList curFilesList;
   emit setTopLabel(tr("Scanning folders and files"));
   int nextPaint = 1;
+
+  qint64 sizeFrom = filtersWidget->getSizeFrom();
+  if (sizeFrom > -1) qDebug() << "File Size limit from " << sizeFrom << "Bytes ";
+  qint64 sizeTo = filtersWidget->getSizeTo();
+  if (sizeTo > -1) qDebug() << "File Size limit   to " << sizeTo   << "Bytes ";
+
+  QDir::Filters filter = filtersWidget->getFilters();
+
+  QSet<QString> currentSearchExt =  filtersWidget->getFilterExtentions();
+
+
+
+  if (currentSearchExt.size()>0) {
+      qDebug() << "Filter by extentions " << currentSearchExt;
+  }
+
+
 
   while (!this->stopWork && !isInterruptionRequested() && i < dirsSize) {
     QDir curDir(dirs.at(i++));
     curdirList.clear();
-    curdirList << curDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot |
-                                   QDir::Hidden | QDir::System);
+    curdirList << curDir.entryList(QDir::Dirs | filter );
     foreach (QString var, curdirList) {
       dirs << curDir.absolutePath() + "/" + var;
       dirsSize++;
     }
     //        dirsSize = dirs.length();
     curFilesList.clear();
-    curFilesList << curDir.entryList(QDir::Files | QDir::NoDotAndDotDot |
-                                     QDir::Hidden | QDir::System);
-    foreach (QString var, curFilesList) {
-      files << curDir.absolutePath() + "/" + var;
-      filesCount++;
+    curFilesList << curDir.entryInfoList(QDir::Files | filter );
+    foreach (QFileInfo var, curFilesList) {
+      bool addIt = true;
+      if (sizeFrom> -1) addIt &= var.size() >= sizeFrom;
+      if (addIt && sizeTo > -1)  addIt &= var.size() <= sizeTo;
+
+
+      if (currentSearchExt.size()>0) {
+          addIt &= currentSearchExt.contains(var.suffix().toLower());
+      }
+      if (addIt) {
+        files << var.absoluteFilePath();
+        filesCount++;
+      }
     }
     if (i > nextPaint) {
       emit setBottomLabel(QString(tr("Found %1 folders and %2 files"))
@@ -55,7 +82,6 @@ void FileHashCalculatorThread::run() {
   emit setProgressbarMaximumValue(filesCount);
   i = 0;
   QSqlQuery query(Common::db);
-  //    QSqlQuery query1(*db);
 
   query.exec("delete from files");
   query.exec("delete from results");
@@ -179,8 +205,6 @@ QString FileHashCalculatorThread::getFileHash(const QString &file_full_path,
   query.bindValue(":file_full_path", file_full_path);
   query.exec();
 
-  // qDebug() << QString("SELECT file_hash FROM files_hash where file_full_path
-  // like'%1'").arg(file_full_path);
   while (query.next()) {
     return query.value(0).toString();
   }

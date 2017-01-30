@@ -1,16 +1,18 @@
 #include "common.h"
 
-const QSet<QString> Common::archive = {"zip", "rar", "tar", "tar.gz", "jar", "war", "ear"};
+const QSet<QString> Common::systemFiles = {"dll", "sys", "ocx", "drv", "dat"};
+const QSet<QString> Common::photo = {"bmp", "gif", "jpg", "jpeg", "png", "tiff"};
 const QSet<QString> Common::audio = {"mp3", "ogg"};
+const QSet<QString> Common::video = {"avi", "wmv", "mp4"};
+
+const QSet<QString> Common::archive = {"zip", "rar", "tar", "tar.gz", "jar", "war", "ear"};
 const QSet<QString> Common::excel = {"xlsx", "xlsm"};
 const QSet<QString> Common::executable = {"exe"};
 const QSet<QString> Common::javascript = {"js"};
 const QSet<QString> Common::pdf_documents = {"pdf"};
-const QSet<QString> Common::photo = {"bmp",  "gif", "jpg", "jpeg", "png", "tiff"};
 const QSet<QString> Common::php = {"php"};
 const QSet<QString> Common::powerpoint = {"ppx", "pptx", "ppsx"};
 const QSet<QString> Common::shellscript = {"bat", "sh"};
-const QSet<QString> Common::video = {"avi", "wmv"};
 const QSet<QString> Common::word = {"doc", "docx", "rtf"};
 const QSet<QString> Common::xml = {"xml", "xhtml"};
 const QSet<QString> Common::web = {"html", "htm"};

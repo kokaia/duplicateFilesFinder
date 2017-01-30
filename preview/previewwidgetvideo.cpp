@@ -33,7 +33,10 @@ PreviewWidgetVideo::PreviewWidgetVideo(const QString &file_path,
   ui->playButton->setEnabled(true);
 }
 
-PreviewWidgetVideo::~PreviewWidgetVideo() { delete ui; }
+PreviewWidgetVideo::~PreviewWidgetVideo() {
+    mediaPlayer.stop();
+    delete ui;
+}
 
 void PreviewWidgetVideo::setUrl(const QUrl &url) {
   ui->errorLabel->setText(QString());
