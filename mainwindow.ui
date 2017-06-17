@@ -176,7 +176,7 @@
     <item>
      <widget class="QTabWidget" name="operationsTabsWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="operationsResultTab">
        <attribute name="title">
@@ -271,7 +271,17 @@
          </widget>
         </item>
         <item>
+         <widget class="QProgressBar" name="progressBarFileSize">
+          <property name="value">
+           <number>0</number>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QProgressBar" name="progressbarFiles">
+          <property name="minimum">
+           <number>0</number>
+          </property>
           <property name="value">
            <number>0</number>
           </property>

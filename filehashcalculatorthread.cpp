@@ -21,6 +21,8 @@ void FileHashCalculatorThread::run() {
 
   int dirsSize = dirs.size();
   int i = 0, filesCount = 0;
+  qint64 filesSumSize = 0;
+  qint64 filesCurSize = 0;
   QStringList files, curdirList;
   QFileInfoList curFilesList;
   emit setTopLabel(tr("Scanning folders and files"));
@@ -66,6 +68,7 @@ void FileHashCalculatorThread::run() {
       if (addIt) {
         files << var.absoluteFilePath();
         filesCount++;
+        filesSumSize+=var.size();
       }
     }
     if (i > nextPaint) {
@@ -80,6 +83,7 @@ void FileHashCalculatorThread::run() {
                        .arg(dirsSize)
                        .arg(filesCount));
   emit setProgressbarMaximumValue(filesCount);
+  emit setProgressBarSizeMaximumValue(filesSumSize>>8);
   i = 0;
   QSqlQuery query(Common::db);
 
@@ -99,8 +103,11 @@ void FileHashCalculatorThread::run() {
       continue;
     }
 
+    filesCurSize += file.size();
     if (i > nextPaint || i + 5 > filesCount) {
       emit setProgressbarValue(i);
+      emit setProgressBarSizeValue(filesCurSize>>8);
+
       emit setBottomLabel(tr("Current processing #%1, file=%2")
                               .arg(i)
                               .arg(file.fileName().size() > 120
@@ -129,6 +136,7 @@ void FileHashCalculatorThread::run() {
   }
 
   emit setProgressbarValue(filesCount);
+  emit setProgressBarSizeValue(filesSumSize);
 
   query.exec(
       "INSERT INTO results( file_name, file_size, file_full_path, file_ext, "
@@ -200,7 +208,7 @@ QString FileHashCalculatorThread::getFileHash(const QString &file_full_path,
                                               QFile *file) {
   QSqlQuery query(Common::hashDb);
   query.prepare(
-      "SELECT file_hash FROM files_hash where file_full_path like "
+      "SELECT file_hash FROM files_hash where file_full_path = "
       ":file_full_path ");
   query.bindValue(":file_full_path", file_full_path);
   query.exec();
@@ -214,10 +222,7 @@ QString FileHashCalculatorThread::getFileHash(const QString &file_full_path,
       QCryptographicHash::hash(file->readAll(), QCryptographicHash::Md5)
           .toHex();
 
-  query.prepare(
-      "INSERT INTO files_hash(file_hash, file_full_path) "
-      " VALUES(:file_hash, :file_full_path)");
-
+  query.prepare("INSERT INTO files_hash(file_hash, file_full_path) VALUES(:file_hash, :file_full_path)");
   query.bindValue(":file_full_path", file_full_path);
   query.bindValue(":file_hash", hashData);
   query.exec();

@@ -65,6 +65,7 @@ void Common::init() {
     hquery.exec(
         "CREATE TABLE files_hash ("
         "id	INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "should_check	INTEGER default 0,"
         "file_hash	TEXT,"
         "file_full_path	TEXT"
         ");");

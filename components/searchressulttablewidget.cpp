@@ -124,11 +124,12 @@ void SearchRessultTableWidget::displayResults(){
     query.exec(
         "SELECT file_size, file_name, file_ext, file_created_date, "
         "file_modifed_date, file_full_path, file_hash FROM results order by "
-        "file_size desc");
+        "file_size desc, file_hash asc ");
     int i = 0;
     const int colsCount = SearchRessultTableWidget::FullPath +
                           1;  // ui->tableWidget->columnCount();
     long long prevSize = 0;
+    QString prev_file_hash;
     int group = 0;
     int j = 0;
     while (query.next()) {
@@ -140,7 +141,7 @@ void SearchRessultTableWidget::displayResults(){
       QString file_full_path    = query.value(5).toString();
       QString file_hash         = query.value(6).toString();
 
-      if (prevSize != file_size) {
+      if (prevSize != file_size || file_hash.compare(prev_file_hash) !=0) {
         if (group > 0) {
           this->insertRow(i);
           for (j = 0; j < colsCount; ++j) {
@@ -177,6 +178,7 @@ void SearchRessultTableWidget::displayResults(){
       }
       ++i;
       prevSize = file_size;
+      prev_file_hash = file_hash;
     }
 
 }

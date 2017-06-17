@@ -46,6 +46,8 @@ signals:
   void setBottomLabel(const QString &s);
   void setProgressbarMaximumValue(int val);
   void setProgressbarValue(int val);
+  void setProgressBarSizeMaximumValue(int val);
+  void setProgressBarSizeValue(int val);
 
 private slots:
 };

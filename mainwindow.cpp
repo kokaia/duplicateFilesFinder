@@ -60,6 +60,11 @@ void MainWindow::on_startSearchButton_clicked() {
           SLOT(setMaximum(int)));
   connect(hashCalculator, SIGNAL(setProgressbarValue(int)), ui->progressbarFiles,
           SLOT(setValue(int)));
+  connect(hashCalculator, SIGNAL(setProgressBarSizeMaximumValue(int)), ui->progressBarFileSize,
+          SLOT(setMaximum(int)));
+  connect(hashCalculator, SIGNAL(setProgressBarSizeValue(int)), ui->progressBarFileSize,
+          SLOT(setValue(int)));
+
 
   ui->operationsTabsWidget->setCurrentIndex(1);
 
