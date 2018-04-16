@@ -5,9 +5,13 @@ FileHashCalculatorThread::FileHashCalculatorThread(const QStringList &dirs, TFil
                                                    CompareMode fileCompareMode)
     : filtersWidget(filtersWidget), dirs(dirs), fileCompareMode(fileCompareMode) {
   qsrand(static_cast<uint>(QTime::currentTime().msec()));
+  timerEverySecond = new QTimer(this);
+  QObject::connect(timerEverySecond, SIGNAL(timeout()), this, SLOT(updateTimeSinceStart()));
+  timerEverySecond->start(1000);
 }
 
 FileHashCalculatorThread::~FileHashCalculatorThread() {
+    delete timerEverySecond;
 //    delete &dirs;
 //    delete &fileCompareMode;
 //    delete &stopWork;
@@ -21,8 +25,11 @@ void FileHashCalculatorThread::run() {
 
   int dirsSize = dirs.size();
   int i = 0, filesCount = 0;
+  timeSinceStart = 0;
   qint64 filesSumSize = 0;
+  int filesSumSizeInt = 0;
   qint64 filesCurSize = 0;
+  int filesCurSizeInt = 0;
   QStringList files, curdirList;
   QFileInfoList curFilesList;
   emit setTopLabel(tr("Scanning folders and files"));
@@ -83,7 +90,8 @@ void FileHashCalculatorThread::run() {
                        .arg(dirsSize)
                        .arg(filesCount));
   emit setProgressbarMaximumValue(filesCount);
-  emit setProgressBarSizeMaximumValue(filesSumSize>>8);
+  filesSumSizeInt = static_cast<int> (filesSumSize >> 8 );
+  emit setProgressBarSizeMaximumValue( filesSumSizeInt );
   i = 0;
   QSqlQuery query(Common::db);
 
@@ -106,7 +114,9 @@ void FileHashCalculatorThread::run() {
     filesCurSize += file.size();
     if (i > nextPaint || i + 5 > filesCount) {
       emit setProgressbarValue(i);
-      emit setProgressBarSizeValue(filesCurSize>>8);
+      emit updateApproximateTime((filesCount  * timeSinceStart) / i - timeSinceStart);
+      filesCurSizeInt = static_cast<int> (filesCurSize >> 8 );
+      emit setProgressBarSizeValue(filesCurSizeInt);
 
       emit setBottomLabel(tr("Current processing #%1, file=%2")
                               .arg(i)
@@ -136,7 +146,7 @@ void FileHashCalculatorThread::run() {
   }
 
   emit setProgressbarValue(filesCount);
-  emit setProgressBarSizeValue(filesSumSize);
+  emit setProgressBarSizeValue( filesSumSizeInt );
 
   query.exec(
       "INSERT INTO results( file_name, file_size, file_full_path, file_ext, "
@@ -153,17 +163,25 @@ void FileHashCalculatorThread::run() {
 }
 
 void FileHashCalculatorThread::calculateResultsMd5AndRemoveUniq() {
+  timeSinceStart = 0;
   QSqlQuery query(Common::db);
 
-  query.exec("SELECT count(*) FROM results ");
+  query.exec("SELECT count(*) cou, sum(file_size) ssize FROM results ");
 
   query.first();
   int filesCount = query.value(0).toInt();
+  qint64 filesCurSize = 0, filesCurSizeDelta = 0;
+  int filesCurSizeInt = 0;
+  qint64 filesSumSize = query.value(1).toLongLong();
+  int filesSumSizeInt = static_cast<int> ( filesSumSize >> 8 );
 
   qDebug() << "Found " << filesCount << " items";
+  qDebug() << "Found files sum size " << filesSumSize << " Byte";
 
   emit setProgressbarValue(0);
+  emit setProgressBarSizeValue(0);
   emit setProgressbarMaximumValue(filesCount);
+  emit setProgressBarSizeMaximumValue(filesSumSizeInt);
 
   query.exec("SELECT id, file_full_path FROM results ");
   QSqlQuery updateQuery(Common::db);
@@ -180,7 +198,12 @@ void FileHashCalculatorThread::calculateResultsMd5AndRemoveUniq() {
       continue;
     }
 
-    QString hashData = this->getFileHash(file_full_path, &file);
+    bool fromCache = false;
+    QString hashData = this->getFileHash(file_full_path, &file, fromCache);
+    if (fromCache){
+      filesCurSizeDelta += file.size();
+      filesSumSize -= file.size();
+    }
 
     updateQuery.bindValue(":id", file_id);
     updateQuery.bindValue(":file_hash", hashData);
@@ -189,6 +212,12 @@ void FileHashCalculatorThread::calculateResultsMd5AndRemoveUniq() {
       qDebug() << updateQuery.lastError().text();
     }
     emit setProgressbarValue(curfilesCount++);
+    filesCurSize += file.size();
+    filesCurSizeInt = static_cast<int> (filesCurSize >> 8 );
+    emit setProgressBarSizeValue(filesCurSizeInt);
+    if (filesCurSize > filesCurSizeDelta) {
+      emit updateApproximateTime(static_cast<int> ((filesSumSize  * timeSinceStart) / (filesCurSize - filesCurSizeDelta)) - timeSinceStart);
+    }
     emit setBottomLabel(tr("Current processing #%1, from %2 file=%3")
                             .arg(curfilesCount)
                             .arg(filesCount)
@@ -204,8 +233,7 @@ void FileHashCalculatorThread::calculateResultsMd5AndRemoveUniq() {
 
 void FileHashCalculatorThread::stopWorking() { this->stopWork = true; }
 
-QString FileHashCalculatorThread::getFileHash(const QString &file_full_path,
-                                              QFile *file) {
+QString FileHashCalculatorThread::getFileHash(const QString &file_full_path, QFile *file, bool &fromCache) {
   QSqlQuery query(Common::hashDb);
   query.prepare(
       "SELECT file_hash FROM files_hash where file_full_path = "
@@ -214,6 +242,7 @@ QString FileHashCalculatorThread::getFileHash(const QString &file_full_path,
   query.exec();
 
   while (query.next()) {
+    fromCache = true;
     return query.value(0).toString();
   }
 
@@ -230,5 +259,8 @@ QString FileHashCalculatorThread::getFileHash(const QString &file_full_path,
   if (query.lastError().isValid()) {
     qDebug() << query.lastError().text();
   }
+  fromCache = false;
   return hashData;
 }
+
+void FileHashCalculatorThread::updateTimeSinceStart() { ++timeSinceStart; }

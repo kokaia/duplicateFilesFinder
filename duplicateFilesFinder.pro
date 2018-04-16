@@ -29,7 +29,8 @@ SOURCES += main.cpp\
     preview/previewwidgetvideo.cpp \
     preview/previewwidgetweb.cpp \
     components/commonlistwidget.cpp \
-    components/tfilterwidget.cpp
+    components/tfilterwidget.cpp \
+    utils/common_util.cpp
 
 HEADERS  += mainwindow.h \
     filehashcalculatorthread.h \
@@ -41,7 +42,8 @@ HEADERS  += mainwindow.h \
     preview/previewwidgetvideo.h \
     preview/previewwidgetweb.h \
     components/commonlistwidget.h \
-    components/tfilterwidget.h
+    components/tfilterwidget.h \
+    utils/common_util.h
 
 FORMS    += mainwindow.ui \
     founditemwidget.ui \

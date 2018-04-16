@@ -8,8 +8,7 @@ MainWindow::MainWindow(QWidget *parent)
   ui->markingButton->addAction(ui->actionClearSelection);
   ui->markingButton->addAction(ui->actionInvertSelection);
   ui->markingButton->addAction(ui->actionSelectByPath);
-
-  ui->searchDirsWidget->getListWidget()->addItem("/home/jedi/Public/");
+  timerEverySecond = new QTimer(this);
 
 }
 
@@ -20,6 +19,9 @@ void MainWindow::on_actionExit_triggered() { QApplication::exit(0); }
 void MainWindow::on_startSearchButton_clicked() {
   ui->startSearchButton->setEnabled(false);
   ui->stopSearchButton->setEnabled(true);
+  ui->labelAproximateTime->setText("");
+  ui->labelExecutedTime->setText("");
+  ui->labelStartDate->setText(QString("Start time %1").arg(QDateTime::currentDateTime().toString()));
   QStringList dirList;
   for (int i = 0; i < ui->searchDirsWidget->getListWidget()->count(); ++i) {
     QListWidgetItem *item = ui->searchDirsWidget->getListWidget()->item(i);
@@ -49,25 +51,20 @@ void MainWindow::on_startSearchButton_clicked() {
 
   hashCalculator = new FileHashCalculatorThread( dirList, ui->filtersWidget, fileCompareMode);
   hashCalculator->start();
-  connect(hashCalculator, SIGNAL(finished()), this,
-          SLOT(correctFinishThread()));
 
-  connect(hashCalculator, SIGNAL(setTopLabel(QString)), ui->progressLabel,
-          SLOT(setText(QString)));
-  connect(hashCalculator, SIGNAL(setBottomLabel(QString)), ui->currentOperationLabel,
-          SLOT(setText(QString)));
-  connect(hashCalculator, SIGNAL(setProgressbarMaximumValue(int)), ui->progressbarFiles,
-          SLOT(setMaximum(int)));
-  connect(hashCalculator, SIGNAL(setProgressbarValue(int)), ui->progressbarFiles,
-          SLOT(setValue(int)));
-  connect(hashCalculator, SIGNAL(setProgressBarSizeMaximumValue(int)), ui->progressBarFileSize,
-          SLOT(setMaximum(int)));
-  connect(hashCalculator, SIGNAL(setProgressBarSizeValue(int)), ui->progressBarFileSize,
-          SLOT(setValue(int)));
+  connect(hashCalculator, SIGNAL(finished()),                          this,                      SLOT(correctFinishThread()));
+  connect(hashCalculator, SIGNAL(updateApproximateTime(int)),          this,                      SLOT(updateApproximateTime(int)));
+  connect(hashCalculator, SIGNAL(setTopLabel(QString)),                ui->progressLabel,         SLOT(setText(QString)));
+  connect(hashCalculator, SIGNAL(setBottomLabel(QString)),             ui->currentOperationLabel, SLOT(setText(QString)));
+  connect(hashCalculator, SIGNAL(setProgressbarMaximumValue(int)),     ui->progressbarFiles,      SLOT(setMaximum(int)));
+  connect(hashCalculator, SIGNAL(setProgressbarValue(int)),            ui->progressbarFiles,      SLOT(setValue(int)));
+  connect(hashCalculator, SIGNAL(setProgressBarSizeMaximumValue(int)), ui->progressBarFileSize,   SLOT(setMaximum(int)));
+  connect(hashCalculator, SIGNAL(setProgressBarSizeValue(int)),        ui->progressBarFileSize,   SLOT(setValue(int)));
 
-
+  timeSinceStart = 0;
+  QObject::connect(timerEverySecond, SIGNAL(timeout()), this, SLOT(updateStartTime()));
+  timerEverySecond->start(1000);
   ui->operationsTabsWidget->setCurrentIndex(1);
-
 }
 
 void MainWindow::on_stopSearchButton_clicked() {
@@ -75,6 +72,7 @@ void MainWindow::on_stopSearchButton_clicked() {
 }
 
 void MainWindow::correctFinishThread() {
+  ui->tableWidget->isAutoCheck = true;
   ui->operationsTabsWidget->setCurrentIndex(0);
   ui->tableWidget->removeAllRows();
   hashCalculator->wait();
@@ -86,6 +84,9 @@ void MainWindow::correctFinishThread() {
   ui->tableWidget->displayResults();
 
   ui->tableWidget->resizeColumnsToContents();
+  ui->tableWidget->isAutoCheck = false;
+  ui->labelEndDate->setText(QString("End Date %1").arg(QDateTime::currentDateTime().toString()));
+  timerEverySecond->stop();
 }
 
 void MainWindow::remove(QGridLayout *layout, int row, int column,
@@ -176,4 +177,29 @@ void MainWindow::on_tableWidget_itemSelectionChanged() {
 void MainWindow::on_actionInvalidate_Files_Hash_Database_triggered() {
   QSqlQuery query(Common::hashDb);
   query.exec("DELETE FROM files_hash ");
+}
+
+void MainWindow::updateStartTime(){
+  timeSinceStart++;
+  if (timeSinceStart < 60) {
+    ui->labelExecutedTime->setText(QString("Executed time %1 sec").arg(timeSinceStart));
+  } else if (timeSinceStart < 3600 ) {
+    ui->labelExecutedTime->setText(QString("Executed time %1 min, %2 sec").arg(timeSinceStart / 60).arg(timeSinceStart % 60));
+  } else if (timeSinceStart < 216000 ) {
+    ui->labelExecutedTime->setText(QString("Executed time %1 hour, %2 min, %3 sec").arg(timeSinceStart / 3600).arg((timeSinceStart % 3600) / 60).arg(timeSinceStart % 60));
+  } else {
+    ui->labelExecutedTime->setText(QString("Executed time %1 hour, %2 min, %3 sec").arg(timeSinceStart / 3600).arg((timeSinceStart % 3600) / 60).arg(timeSinceStart % 60));
+  }
+}
+
+void MainWindow::updateApproximateTime(int appTime){
+  if (appTime < 60) {
+    ui->labelAproximateTime->setText(QString("Expected time time %1 sec").arg(appTime));
+  } else if (appTime < 3600 ) {
+    ui->labelAproximateTime->setText(QString("Expected time %1 min, %2 sec").arg(appTime / 60).arg(appTime % 60));
+  } else if (appTime < 216000 ) {
+    ui->labelAproximateTime->setText(QString("Expected time %1 hour, %2 min, %3 sec").arg(appTime / 3600).arg((appTime % 3600) / 60).arg(appTime % 60));
+  } else {
+    ui->labelAproximateTime->setText(QString("Expected time %1 hour, %2 min, %3 sec").arg(appTime / 3600).arg((appTime % 3600) / 60).arg(appTime % 60));
+  }
 }

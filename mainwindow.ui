@@ -110,6 +110,9 @@
            <property name="text">
             <string>Size, then &amp;Md5</string>
            </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
           </widget>
          </item>
          <item row="4" column="0">
@@ -125,7 +128,7 @@
             <string>&amp;Size</string>
            </property>
            <property name="checked">
-            <bool>true</bool>
+            <bool>false</bool>
            </property>
           </widget>
          </item>
@@ -185,6 +188,11 @@
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
          <widget class="SearchRessultTableWidget" name="tableWidget">
+          <property name="font">
+           <font>
+            <pointsize>7</pointsize>
+           </font>
+          </property>
           <property name="editTriggers">
            <set>QAbstractItemView::NoEditTriggers</set>
           </property>
@@ -206,45 +214,90 @@
            <property name="text">
             <string>Group</string>
            </property>
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
           </column>
           <column>
            <property name="text">
             <string>File Size Byte</string>
            </property>
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
           </column>
           <column>
            <property name="text">
-            <string>File Size Mixed</string>
+            <string>File Size</string>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
            </property>
           </column>
           <column>
            <property name="text">
             <string>File Name</string>
            </property>
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
           </column>
           <column>
            <property name="text">
             <string>Ext</string>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
            </property>
           </column>
           <column>
            <property name="text">
             <string>Create Date</string>
            </property>
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
           </column>
           <column>
            <property name="text">
             <string>Modifed Date</string>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
            </property>
           </column>
           <column>
            <property name="text">
             <string>FileHash</string>
            </property>
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
           </column>
           <column>
            <property name="text">
             <string>Full Path</string>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
            </property>
           </column>
          </widget>
@@ -256,6 +309,34 @@
         <string>Progress</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_4">
+        <item>
+         <widget class="QLabel" name="labelStartDate">
+          <property name="text">
+           <string>labelStartDate #############################################</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="labelExecutedTime">
+          <property name="text">
+           <string>labelExecutedTime ##########################################</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="labelAproximateTime">
+          <property name="text">
+           <string>labelAproximateTime ########################################</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="labelEndDate">
+          <property name="text">
+           <string>labelEndDate ##############################################</string>
+          </property>
+         </widget>
+        </item>
         <item>
          <widget class="QLabel" name="progressLabel">
           <property name="text">
@@ -272,6 +353,9 @@
         </item>
         <item>
          <widget class="QProgressBar" name="progressBarFileSize">
+          <property name="minimum">
+           <number>0</number>
+          </property>
           <property name="value">
            <number>0</number>
           </property>
@@ -287,6 +371,19 @@
           </property>
          </widget>
         </item>
+        <item>
+         <spacer name="verticalSpacer">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
        </layout>
       </widget>
      </widget>
@@ -299,7 +396,7 @@
      <x>0</x>
      <y>0</y>
      <width>1118</width>
-     <height>31</height>
+     <height>32</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

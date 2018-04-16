@@ -14,6 +14,7 @@
 #include <QSqlError>
 #include <QThread>
 #include <QWidget>
+#include <QTimer>
 
 
 class FileHashCalculatorThread : public QThread {
@@ -30,11 +31,13 @@ class FileHashCalculatorThread : public QThread {
   TFilterWidget *filtersWidget;
   QStringList dirs;
   CompareMode fileCompareMode;
+  QTimer *timerEverySecond;
+  qint32 timeSinceStart;
   bool stopWork = false;
 
   int getRandom();
   void calculateResultsMd5AndRemoveUniq() ;
-  QString getFileHash(const QString &file_full_path, QFile *file);
+  QString getFileHash(const QString &file_full_path, QFile *file, bool &fromCache);
 
 protected:
  virtual void run();  // Q_DECL_OVERRIDE
@@ -48,8 +51,10 @@ signals:
   void setProgressbarValue(int val);
   void setProgressBarSizeMaximumValue(int val);
   void setProgressBarSizeValue(int val);
+  void updateApproximateTime(int val);
 
 private slots:
+  void updateTimeSinceStart();
 };
 
 #endif  // FILEHASHCALCULATORTHREAD_H

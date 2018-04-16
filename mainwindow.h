@@ -36,6 +36,8 @@ class MainWindow : public QMainWindow {
   ~MainWindow();
 
  private slots:
+  void updateStartTime();
+  void updateApproximateTime(int appTime);
   void on_actionExit_triggered();
   void on_startSearchButton_clicked();
   void on_stopSearchButton_clicked();
@@ -46,10 +48,10 @@ class MainWindow : public QMainWindow {
 private:
   Ui::MainWindow *ui;
   FileHashCalculatorThread *hashCalculator = 0;
+  QTimer *timerEverySecond;
+  quint32 timeSinceStart;
   void deleteChildWidgets(QLayoutItem *item);
   void remove(QGridLayout *layout, int row, int column, bool deleteWidgets);
-  QString sizeFormat(long long val);
-
 };
 
 #endif  // MAINWINDOW_H
