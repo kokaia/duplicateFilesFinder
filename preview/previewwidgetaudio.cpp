@@ -16,7 +16,7 @@ PreviewWidgetAudio::PreviewWidgetAudio(const QString &file_path,
           &PreviewWidgetAudio::setPosition);
   ui->errorLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Maximum);
 
-  connect(&mediaPlayer, &QMediaPlayer::stateChanged, this,
+  connect(&mediaPlayer, &QMediaPlayer::playbackStateChanged, this,
           &PreviewWidgetAudio::mediaStateChanged);
   connect(&mediaPlayer, &QMediaPlayer::positionChanged, this,
           &PreviewWidgetAudio::positionChanged);
@@ -45,14 +45,14 @@ void PreviewWidgetAudio::setUrl(const QUrl &url) {
 }
 
 void PreviewWidgetAudio::play() {
-  if (mediaPlayer.state() == QMediaPlayer::PlayingState) {
+  if (mediaPlayer.playbackState() == QMediaPlayer::PlayingState) {
     mediaPlayer.pause();
   } else {
     mediaPlayer.play();
   }
 }
 
-void PreviewWidgetAudio::mediaStateChanged(QMediaPlayer::State state) {
+void PreviewWidgetAudio::mediaStateChanged(QMediaPlayer::PlaybackState state) {
   if (state == QMediaPlayer::PlayingState) {
     ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
     ui->playButton->setText(tr("Play"));

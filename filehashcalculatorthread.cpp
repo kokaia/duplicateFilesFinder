@@ -1,6 +1,8 @@
 #include "filehashcalculatorthread.h"
 #include "ui_mainwindow.h"
 
+#include <QFileInfo>
+
 FileHashCalculatorThread::FileHashCalculatorThread(const QStringList &dirs, TFilterWidget *filtersWidget,
                                                    CompareMode fileCompareMode)
     : filtersWidget(filtersWidget), dirs(dirs), fileCompareMode(fileCompareMode) {

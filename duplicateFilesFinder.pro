@@ -4,9 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui sql webkitwidgets multimedia multimediawidgets
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT       += core gui widgets sql multimedia multimediawidgets webenginewidgets
 
 cross_compile {
   posix|qnx|linux: DEFINES += QTWEBENGINE_RECIPE_BROWSER_EMBEDDED

@@ -9,18 +9,6 @@
 #include "preview/previewwidgetweb.h"
 #include "founditemwidget.h"
 
-#include <QCheckBox>
-#include <QFileDialog>
-#include <QGraphicsView>
-#include <QGridLayout>
-#include <QInputDialog>
-#include <QLayoutItem>
-#include <QMainWindow>
-#include <QMessageBox>
-#include <QMetaObject>
-#include <QTableWidget>
-#include <QThread>
-
 namespace Ui {
 class MainWindow;
 }

@@ -15,7 +15,7 @@ class SearchRessultTableWidget : public QTableWidget
     Q_OBJECT
 
 public:
-    explicit SearchRessultTableWidget(QWidget *parent = 0);
+    explicit SearchRessultTableWidget(QWidget *parent = nullptr);
     ~SearchRessultTableWidget();
 
     enum ResultTableWidgetHeaders {

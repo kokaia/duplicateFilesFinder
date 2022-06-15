@@ -4,8 +4,8 @@
 #include <QWidget>
 #include <QUrl>
 #include <qvideowidget.h>
-#include <qvideosurfaceformat.h>
 #include <QMediaPlayer>
+#include <QStyle>
 
 namespace Ui {
 class PreviewWidgetAudio;
@@ -16,7 +16,7 @@ class PreviewWidgetAudio : public QWidget
     Q_OBJECT
 
 public:
-    explicit PreviewWidgetAudio(const QString &file_path, QWidget *parent = 0);
+    explicit PreviewWidgetAudio(const QString &file_path, QWidget *parent = nullptr);
     ~PreviewWidgetAudio();
 
     void setUrl(const QUrl &url);
@@ -25,7 +25,7 @@ public slots:
     void play();
 
 private slots:
-    void mediaStateChanged(QMediaPlayer::State state);
+    void mediaStateChanged(QMediaPlayer::PlaybackState state);
     void positionChanged(int position);
     void durationChanged(int duration);
     void setPosition(int position);

@@ -1,6 +1,18 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include <QCheckBox>
+#include <QFileDialog>
+#include <QGraphicsView>
+#include <QGridLayout>
+#include <QInputDialog>
+#include <QLayoutItem>
+#include <QMainWindow>
+#include <QMessageBox>
+#include <QMetaObject>
+#include <QTableWidget>
+#include <QThread>
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow) {
   ui->setupUi(this);

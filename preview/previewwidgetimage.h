@@ -8,7 +8,8 @@
 #include <QGraphicsPixmapItem>
 #include <QMouseEvent>
 #include <QApplication>
-#include <QDesktopWidget>
+#include <QStyle>
+#include <QScreen>
 
 namespace Ui {
 class PreviewWidgetImage;
@@ -19,7 +20,7 @@ class PreviewWidgetImage : public QWidget
     Q_OBJECT
 
 public:
-    explicit PreviewWidgetImage(const QString &file_path, QWidget *parent = 0);
+    explicit PreviewWidgetImage(const QString &file_path, QWidget *parent = nullptr);
     ~PreviewWidgetImage();
 
 protected:

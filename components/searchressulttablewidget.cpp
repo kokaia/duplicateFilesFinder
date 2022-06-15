@@ -1,4 +1,5 @@
 #include "searchressulttablewidget.h"
+#include <QFile>
 
 SearchRessultTableWidget::SearchRessultTableWidget(QWidget *parent)
     : QTableWidget(parent) {}
@@ -53,10 +54,10 @@ void SearchRessultTableWidget::cellClicked(int row, int column) {
     QTableWidgetItem *ritem = this->item(row, i);
     QFont font(item->font());
     if (item->checkState() == Qt::Checked) {
-      ritem->setBackgroundColor(Qt::gray);
+      ritem->setBackground(Qt::gray);
       font.setStrikeOut(true);
     } else {
-      ritem->setBackgroundColor(Qt::white);
+      ritem->setBackground(Qt::white);
       font.setStrikeOut(false);
     }
     ritem->setFont(font);
@@ -88,7 +89,7 @@ void SearchRessultTableWidget::deleteSelectedItems() {
   QStringList sl;
   for (int i = 0; i < this->rowCount(); ++i) {
     QTableWidgetItem *item = this->item(i, SearchRessultTableWidget::Checkbox);
-    if (item == 0) continue;
+    if (item == nullptr) continue;
     if (item->checkState() == Qt::Checked) {
       filesCount++;
       fullSize += this->item(i, SearchRessultTableWidget::FileSize)->data(Qt::DisplayRole).toInt();
@@ -106,7 +107,7 @@ void SearchRessultTableWidget::deleteSelectedItems() {
   qDebug() << "Deleting files";
   for (int i = 0; i < this->rowCount(); ++i) {
     QTableWidgetItem *item = this->item(i, SearchRessultTableWidget::Checkbox);
-    if (item == 0) continue;
+    if (item == nullptr) continue;
     if (item->checkState() == Qt::Checked) {
       filesCount++;
       QTableWidgetItem *fpath =
@@ -146,7 +147,7 @@ void SearchRessultTableWidget::displayResults(){
           this->insertRow(i);
           for (j = 0; j < colsCount; ++j) {
             QTableWidgetItem *item = new QTableWidgetItem();
-            item->setBackgroundColor(Qt::darkGray);
+            item->setBackground(Qt::darkGray);
             this->setItem(i, j, item);
           }
           i++;
@@ -189,7 +190,7 @@ void SearchRessultTableWidget::unSelectItems() {
   for (int i = 0; i < this->rowCount(); ++i) {
     QTableWidgetItem *item =
         this->item(i, SearchRessultTableWidget::Checkbox);
-    if (item == 0) continue;
+    if (item == nullptr) continue;
     if (item->checkState() == Qt::Checked) {
       item->setCheckState(Qt::Unchecked);
       this->cellClicked(i, SearchRessultTableWidget::Checkbox);
@@ -219,7 +220,7 @@ void SearchRessultTableWidget::selectItemsByPath() {
   for (int i = 0; i < this->rowCount(); ++i) {
     QTableWidgetItem *fpath =
         this->item(i, SearchRessultTableWidget::FullPath);
-    if (fpath == 0) continue;
+    if (fpath == nullptr) continue;
     if (fpath->data(Qt::DisplayRole).toString().startsWith(text)) {
       QTableWidgetItem *item =
           this->item(i, SearchRessultTableWidget::Checkbox);

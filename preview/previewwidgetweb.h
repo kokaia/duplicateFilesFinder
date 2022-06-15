@@ -2,8 +2,6 @@
 #define PREVIEWWIDGETWEB_H
 
 #include <QWidget>
-#include <QFileInfo>
-#include <QtWebKitWidgets/QWebView>
 
 namespace Ui {
 class PreviewWidgetWeb;

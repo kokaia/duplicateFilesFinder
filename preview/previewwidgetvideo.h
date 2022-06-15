@@ -7,7 +7,6 @@
 #include <QtGui/QMovie>
 #include <QtWidgets/QWidget>
 #include <qvideowidget.h>
-#include <qvideosurfaceformat.h>
 
 namespace Ui {
 class PreviewWidgetVideo;
@@ -27,7 +26,7 @@ public slots:
     void play();
 
 private slots:
-    void mediaStateChanged(QMediaPlayer::State state);
+    void mediaStateChanged(QMediaPlayer::PlaybackState state);
     void positionChanged(int position);
     void durationChanged(int duration);
     void setPosition(int position);

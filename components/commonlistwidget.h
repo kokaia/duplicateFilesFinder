@@ -15,7 +15,7 @@ class CommonListWidget : public QWidget
     Q_OBJECT
 
 public:
-    explicit CommonListWidget(QWidget *parent = 0);
+    explicit CommonListWidget(QWidget *parent = nullptr);
     ~CommonListWidget();
     QListWidget* getListWidget();
 

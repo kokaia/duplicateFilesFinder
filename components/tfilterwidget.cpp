@@ -8,9 +8,9 @@ TFilterWidget::TFilterWidget(QWidget *parent) :
     ui->setupUi(this);
 
     ui->filterFileMaskComboBox->addItem("All Files\t| *.*", Common::allFilesGroup);
-    ui->filterFileMaskComboBox->addItem("Images\t| *." + QString(Common::photo.toList().join(", *.")), Common::photoGroup);
-    ui->filterFileMaskComboBox->addItem("Audio\t| *." + QString(Common::audio.toList().join(", *.")), Common::audioGroup);
-    ui->filterFileMaskComboBox->addItem("Video\t| *." + QString(Common::video.toList().join(", *.")), Common::videoGroup);
+    ui->filterFileMaskComboBox->addItem("Images\t| *." + QString(Common::photo.values().join(", *.")), Common::photoGroup);
+    ui->filterFileMaskComboBox->addItem("Audio\t| *." + QString(Common::audio.values().join(", *.")), Common::audioGroup);
+    ui->filterFileMaskComboBox->addItem("Video\t| *." + QString(Common::video.values().join(", *.")), Common::videoGroup);
 
 }
 
