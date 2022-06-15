@@ -13,7 +13,7 @@
 #include <QMainWindow>
 #include <QMetaObject>
 #include <QTableWidget>
-#include <QThread>
+#include <QTimer>
 
 MainWindow::MainWindow(QWidget *parent)
         : QMainWindow(parent), ui(new Ui::MainWindow) {
