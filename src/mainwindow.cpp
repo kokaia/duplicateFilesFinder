@@ -11,7 +11,6 @@
 #include <QGridLayout>
 #include <QLayoutItem>
 #include <QMainWindow>
-#include <QMessageBox>
 #include <QMetaObject>
 #include <QTableWidget>
 #include <QThread>

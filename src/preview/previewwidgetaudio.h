@@ -2,9 +2,7 @@
 #define PREVIEWWIDGETAUDIO_H
 
 #include <QWidget>
-#include <QUrl>
 #include <QMediaPlayer>
-#include <QStyle>
 
 namespace Ui {
 class PreviewWidgetAudio;
@@ -16,7 +14,7 @@ class PreviewWidgetAudio : public QWidget
 
 public:
     explicit PreviewWidgetAudio(const QString &file_path, QWidget *parent = nullptr);
-    ~PreviewWidgetAudio();
+    ~PreviewWidgetAudio() override;
 
     void setUrl(const QUrl &url);
 
@@ -28,7 +26,7 @@ private slots:
     void positionChanged(int position);
     void durationChanged(int duration);
     void setPosition(int position);
-    void handleError();
+    void handleError(QMediaPlayer::Error error, const QString &errorString);
 
 private:
     Ui::PreviewWidgetAudio *ui;
