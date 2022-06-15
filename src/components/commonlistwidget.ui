@@ -30,7 +30,13 @@
     <number>0</number>
    </property>
    <item>
-    <widget class="QListWidget" name="listWidget"/>
+    <widget class="QListWidget" name="listWidget">
+     <item>
+      <property name="text">
+       <string>/home/jedi/Desktop/For Upload/Softgrn/</string>
+      </property>
+     </item>
+    </widget>
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
