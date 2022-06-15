@@ -1,11 +1,14 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include <QCheckBox>
+#include "founditemwidget.h"
+#include "preview/previewwidgetaudio.h"
+#include "preview/previewwidgetimage.h"
+#include "preview/previewwidgetvideo.h"
+#include "preview/previewwidgetweb.h"
+
 #include <QFileDialog>
-#include <QGraphicsView>
 #include <QGridLayout>
-#include <QInputDialog>
 #include <QLayoutItem>
 #include <QMainWindow>
 #include <QMessageBox>
@@ -171,7 +174,7 @@ void MainWindow::on_tableWidget_itemSelectionChanged() {
         if (Common::photo.contains(file_ext.toLower())) {
             w = new PreviewWidgetImage(file_full_path);
         } else if (Common::video.contains(file_ext.toLower())) {
-//       w = new PreviewWidgetVideo(file_full_path);
+           w = new PreviewWidgetVideo(file_full_path);
         } else if (Common::audio.contains(file_ext.toLower())) {
             w = new PreviewWidgetAudio(file_full_path);
         } else if (Common::web.contains(file_ext.toLower())) {

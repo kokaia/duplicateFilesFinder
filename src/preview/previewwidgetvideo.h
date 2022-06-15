@@ -2,10 +2,7 @@
 #define PREVIEWWIDGETVIDEO_H
 
 #include <QWidget>
-#include <QtWidgets>
-#include <qmediaplayer.h>
-#include <QtGui/QMovie>
-#include <QtWidgets/QWidget>
+#include <QMediaPlayer>
 
 namespace Ui {
 class PreviewWidgetVideo;
@@ -16,8 +13,8 @@ class PreviewWidgetVideo : public QWidget
     Q_OBJECT
 
 public:
-    explicit PreviewWidgetVideo(const QString &file_path, QWidget *parent = 0);
-    ~PreviewWidgetVideo();
+    explicit PreviewWidgetVideo(const QString &file_path, QWidget *parent = nullptr);
+    ~PreviewWidgetVideo() override;
 
     void setUrl(const QUrl &url);
 
@@ -29,7 +26,7 @@ private slots:
     void positionChanged(int position);
     void durationChanged(int duration);
     void setPosition(int position);
-    void handleError();
+    void handleError(QMediaPlayer::Error error, const QString &errorString);
 
 private:
     Ui::PreviewWidgetVideo *ui;

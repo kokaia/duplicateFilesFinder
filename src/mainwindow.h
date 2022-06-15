@@ -1,13 +1,11 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QMainWindow>
+#include <QLayoutItem>
+#include <QGridLayout>
 #include "common.h"
 #include "filehashcalculatorthread.h"
-#include "preview/previewwidgetaudio.h"
-#include "preview/previewwidgetimage.h"
-#include "preview/previewwidgetvideo.h"
-#include "preview/previewwidgetweb.h"
-#include "founditemwidget.h"
 
 namespace Ui {
 class MainWindow;
@@ -20,13 +18,13 @@ class MainWindow : public QMainWindow {
   enum DatabaseSavingMode { SaveToMemory, SaveToFile };
 
 
-  explicit MainWindow(QWidget *parent = 0);
+  explicit MainWindow(QWidget *parent = nullptr);
   ~MainWindow();
 
  private slots:
   void updateStartTime();
   void updateApproximateTime(int appTime);
-  void on_actionExit_triggered();
+  static void on_actionExit_triggered();
   void on_startSearchButton_clicked();
   void on_stopSearchButton_clicked();
   void correctFinishThread();
@@ -35,7 +33,7 @@ class MainWindow : public QMainWindow {
 
 private:
   Ui::MainWindow *ui;
-  FileHashCalculatorThread *hashCalculator = 0;
+  FileHashCalculatorThread *hashCalculator = nullptr;
   QTimer *timerEverySecond;
   quint32 timeSinceStart;
   void deleteChildWidgets(QLayoutItem *item);
