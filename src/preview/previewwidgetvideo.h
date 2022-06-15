@@ -6,7 +6,6 @@
 #include <qmediaplayer.h>
 #include <QtGui/QMovie>
 #include <QtWidgets/QWidget>
-#include <qvideowidget.h>
 
 namespace Ui {
 class PreviewWidgetVideo;

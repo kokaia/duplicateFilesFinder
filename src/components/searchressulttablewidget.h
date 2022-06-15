@@ -1,7 +1,7 @@
 #ifndef SEARCHRESSULTTABLEWIDGET_H
 #define SEARCHRESSULTTABLEWIDGET_H
 
-#include "common.h"
+#include "src/common.h"
 
 #include <QTableWidget>
 #include <QDebug>

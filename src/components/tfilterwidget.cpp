@@ -1,6 +1,12 @@
 #include "tfilterwidget.h"
 #include "ui_tfilterwidget.h"
 
+#include <QWidget>
+#include <QSpinBox>
+#include <QComboBox>
+#include <QCheckBox>
+
+
 TFilterWidget::TFilterWidget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::TFilterWidget)

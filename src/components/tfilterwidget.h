@@ -1,13 +1,9 @@
 #ifndef TFILTERWIDGET_H
 #define TFILTERWIDGET_H
 
-#include <QWidget>
-#include <QSpinBox>
-#include <QComboBox>
-#include <QCheckBox>
-#include <QDir>
+#include "src/common.h"
 
-#include "common.h"
+#include <QDir>
 
 namespace Ui {
 class TFilterWidget;

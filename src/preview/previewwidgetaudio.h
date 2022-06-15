@@ -3,7 +3,6 @@
 
 #include <QWidget>
 #include <QUrl>
-#include <qvideowidget.h>
 #include <QMediaPlayer>
 #include <QStyle>
 

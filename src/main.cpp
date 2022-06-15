@@ -5,27 +5,26 @@
 #include <QApplication>
 
 int main(int argc, char *argv[]) {
-  QApplication a(argc, argv);
+    QApplication a(argc, argv);
 
-  QCoreApplication::setApplicationName("Video Widget Example");
-  QCoreApplication::setOrganizationName("QtProject");
-  QGuiApplication::setApplicationDisplayName(QCoreApplication::applicationName());
-  QCoreApplication::setApplicationVersion(QT_VERSION_STR);
+    QCoreApplication::setApplicationName("Duplicate file finder");
+    QCoreApplication::setOrganizationName("QtProject");
+    QGuiApplication::setApplicationDisplayName(QCoreApplication::applicationName());
+    QCoreApplication::setApplicationVersion(QT_VERSION_STR);
 
-  if (!QSqlDatabase::drivers().contains("QSQLITE")) {
-      QMessageBox::critical(nullptr, "Unable to load database", "This app needs the SQLITE driver");
-      return 0;
-  }
+    if (!QSqlDatabase::drivers().contains("QSQLITE")) {
+        QMessageBox::critical(nullptr, "Unable to load database", "This app needs the SQLITE driver");
+        return 0;
+    }
 
-  Common::init();
+    Common::init();
+    MainWindow w;
 
-  MainWindow w;
+    QList<QScreen *> screens = QGuiApplication::screens();
+    QScreen *screen = screens.at(0);
+    w.setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, w.size(), screen->availableGeometry()));
 
-  QList < QScreen * > screens = QGuiApplication::screens();
-  QScreen *screen = screens.at(0);
-  w.setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, w.size(), screen->availableGeometry()));
+    w.show();
 
-  w.show();
-
-  return a.exec();
+    return QApplication::exec();
 }
